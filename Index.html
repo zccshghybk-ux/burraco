@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Burraco">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icona-512.png">
+<title>Segnapunti Burraco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --felt:#1d5c40; --felt-dark:#154732; --felt-edge:#0e3423;
+    --card:#faf6ec; --card-edge:#e8e0cc;
+    --ink:#26221a; --ink-soft:#6d6453;
+    --red:#b3372e; --gold:#d9a441; --ok:#2e7d4f;
+    --shadow:0 6px 18px rgba(0,0,0,.28);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:'Public Sans',-apple-system,sans-serif;
+    background:radial-gradient(circle at 50% 20%, var(--felt) 0%, var(--felt-dark) 60%, var(--felt-edge) 100%);
+    background-attachment:fixed;
+    color:var(--ink);
+    min-height:100vh;
+    padding:max(env(safe-area-inset-top),14px) 14px max(env(safe-area-inset-bottom),20px);
+  }
+  .wrap{max-width:min(94vw,820px); margin:0 auto;}
+  h1{
+    font-family:'Fraunces',serif; font-weight:800; color:var(--gold);
+    text-align:center; font-size:clamp(38px,9vw,58px); margin:6px 0 2px;
+    letter-spacing:1px; text-shadow:0 3px 8px rgba(0,0,0,.45);
+  }
+  .sub{text-align:center; color:rgba(250,246,236,.95); font-weight:600;
+    font-size:clamp(15px,2.2vw,19px); margin:0 0 18px; text-shadow:0 1px 3px rgba(0,0,0,.35);}
+  .panel{
+    background:var(--card); border:1px solid var(--card-edge);
+    border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:var(--shadow);
+  }
+  .panel h2{
+    font-family:'Fraunces',serif; font-weight:600; font-size:18px; margin:0 0 10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .suits{color:var(--red); font-size:15px;}
+  label{font-size:15px; font-weight:600; color:#5c5648; display:block; margin:10px 0 4px;}
+  input[type=text]{
+    width:100%; padding:12px; font-size:17px; border:1.5px solid var(--card-edge);
+    border-radius:10px; background:#fff; font-family:inherit;
+  }
+  select.psel{
+    width:100%; padding:12px; font-size:17px; border:1.5px solid var(--card-edge);
+    border-radius:10px; background:#fff; font-family:inherit; color:var(--ink);
+    -webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9'><path d='M1 1l6 6 6-6' stroke='%23b3372e' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat:no-repeat; background-position:right 14px center;
+  }
+  .seg{display:flex; gap:8px; flex-wrap:wrap;}
+  .seg button{
+    flex:1; min-width:70px; padding:12px 8px; font-size:16px; font-weight:600;
+    border:1.5px solid var(--card-edge); border-radius:10px; background:#fff; color:var(--ink);
+    font-family:inherit;
+  }
+  .seg button.on{background:var(--felt); color:#fff; border-color:var(--felt);}
+  .btn{
+    display:block; width:100%; padding:16px; font-size:18px; font-weight:700;
+    border:none; border-radius:14px; background:var(--red); color:#fff;
+    font-family:inherit; box-shadow:var(--shadow); margin-top:6px;
+  }
+  .btn.secondary{background:transparent; color:var(--card); box-shadow:none; border:1.5px solid rgba(250,246,236,.5); font-weight:600; font-size:16px; padding:13px;}
+  .btn.gold{background:var(--gold); color:#3a2c08;}
+  .btn:active{transform:scale(.98);}
+  .btn[disabled]{opacity:.45;}
+
+  .totals{display:flex; gap:10px;}
+  .tot{
+    flex:1; background:var(--card); border-radius:14px; padding:14px 10px; text-align:center;
+    box-shadow:var(--shadow); border-top:5px solid var(--gold); position:relative;
+  }
+  .tot .name{font-size:clamp(15px,2vw,18px); font-weight:700; color:#5c5648; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .tot .pts{font-family:'Fraunces',serif; font-weight:800; font-size:clamp(32px,9vw,48px); line-height:1.15;}
+  .tot .pts.neg{color:var(--red);}
+  .tot.lead::after{content:"♛"; position:absolute; top:-14px; right:8px; font-size:18px; color:var(--gold); text-shadow:0 1px 3px rgba(0,0,0,.4);}
+  .meta-line{text-align:center; color:rgba(250,246,236,.9); font-size:15px; margin:10px 0 6px;}
+  .dealer-line{text-align:center; color:var(--gold); font-weight:700; font-size:clamp(16px,2.2vw,19px); margin:0 0 14px; text-shadow:0 1px 3px rgba(0,0,0,.35);}
+  .dealer-tag{background:#f2ecdd; border:1.5px solid var(--card-edge); border-radius:10px; padding:10px 12px; font-size:16px; margin:0 0 6px;}
+  .mini-tot{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 8px;}
+  .mini-tot span{flex:1; min-width:90px; background:#f8f4e8; border:1.5px solid var(--card-edge); border-top:3px solid var(--gold); border-radius:10px; padding:8px 6px; text-align:center; font-size:13.5px; font-weight:600; color:#5c5648;}
+  .mini-tot span b{display:block; font-family:'Fraunces',serif; font-size:19px; color:var(--ink);}
+  .mini-tot span b.neg{color:var(--red);}
+
+  .team-block{border:1.5px solid var(--card-edge); border-radius:12px; padding:12px; margin-top:12px; background:#fff;}
+  .pair-box{border:1.5px solid var(--card-edge); border-radius:12px; padding:12px; margin-top:12px;}
+  .pair-box h3{margin:0 0 2px; font-family:'Fraunces',serif; font-size:16px; font-weight:600;}
+  .pair-1{background:#fdf6dc !important; border-color:#e3d49c !important;}
+  .pair-2{background:#fdeddc !important; border-color:#e6c9a2 !important;}
+  .team-block h3{margin:0 0 8px; font-size:15px; font-family:'Fraunces',serif; font-weight:600;}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 0; border-bottom:1px dashed var(--card-edge);}
+  .row:last-child{border-bottom:none;}
+  .row .lbl{font-size:16px; font-weight:600;}
+  .row .lbl small{display:block; font-weight:400; color:#8a8271; font-size:12.5px;}
+  .stepper{display:flex; align-items:center; gap:0; border:1.5px solid var(--card-edge); border-radius:10px; overflow:hidden;}
+  .stepper button{width:42px; height:40px; border:none; background:#f2ecdd; font-size:20px; font-weight:700; color:var(--ink); font-family:inherit;}
+  .stepper button:active{background:var(--gold);}
+  .stepper .val{width:44px; text-align:center; font-size:16px; font-weight:700;}
+  .toggle{
+    width:56px; height:32px; border-radius:16px; border:none; background:#d8d0bc; position:relative; transition:background .15s;
+  }
+  .toggle::after{content:""; position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:left .15s;}
+  .toggle.on{background:var(--ok);}
+  .toggle.on::after{left:27px;}
+  .toggle.auto{opacity:.75;}
+  .numpad-field{display:flex; align-items:center; gap:6px;}
+  .signbtn{width:38px; height:40px; border:1.5px solid var(--card-edge); border-radius:10px; background:#f2ecdd; font-size:17px; font-weight:700; font-family:inherit; color:var(--ink);}
+  .infob{display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; margin-left:6px; border-radius:50%; border:1.5px solid var(--felt); color:var(--felt); background:transparent; font-size:12px; font-weight:800; font-family:Georgia,serif; font-style:italic; vertical-align:middle; padding:0; line-height:1;}
+  .infob:active{background:var(--felt); color:#fff;}
+  .istr{padding:10px 10px 4px; border-radius:10px;}
+  .istr h4{font-family:'Fraunces',serif; font-size:17px; margin:0 0 4px;}
+  .istr p{font-size:15px; line-height:1.55; margin:0 0 10px; color:#3d3830;}
+  .istr.evid{background:#fdf6dc; outline:2px solid var(--gold);}
+  .deal-stage{display:flex; flex-direction:column; align-items:center; gap:20px; width:100%;}
+  .deal-stage2{position:relative; width:min(92vw,560px); height:430px;}
+  .fan-card{position:absolute; left:50%; top:24px; width:64px; aspect-ratio:5/7; margin-left:-32px; transform-origin:50% 135%; perspective:800px; transition:transform .6s cubic-bezier(.2,.7,.3,1), opacity .5s; z-index:1;}
+  .fan-card .flip-inner{transition:transform .5s ease;}
+  .fan-card .flip-back{font-size:15px; border-width:2px; border-radius:8px; line-height:1.2;}
+  .fan-card .flip-front{font-size:19px; border-width:2px; border-radius:8px; gap:1px; padding:3px;}
+  .fan-card .flip-front .suitchar{font-size:23px;}
+  .fan-card .flip-front .nm{font-family:'Public Sans',sans-serif; font-size:9.5px; font-weight:700; color:#5c5648; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .fan-card.picked{z-index:5;}
+  .fan-card.dim{opacity:.15;}
+  .fan-card.win{z-index:6;}
+  .fan-card.win .flip-front{outline:3px solid var(--gold); box-shadow:0 0 28px rgba(217,164,65,.95);}
+  .flip-inner{position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .3s ease;}
+  .flip-front,.flip-back{position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; border-radius:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 26px rgba(0,0,0,.45);}
+  .flip-back{background:var(--felt); border:3px solid var(--gold); color:var(--gold); font-size:clamp(20px,5vw,30px); line-height:1.25; text-align:center;}
+  .flip-front{background:var(--card); border:3px solid var(--gold); transform:rotateY(180deg); font-family:'Fraunces',serif; font-weight:800; font-size:clamp(24px,5.5vw,34px); padding:6px; text-align:center; flex-direction:column; gap:2px;}
+  .flip-front .suitchar{font-size:clamp(28px,6.5vw,42px); line-height:1;}
+  .flip-front.red{color:#c62f24;}
+  .flip-front.blk{color:#1d1a14;}
+  .deal-caption{color:var(--gold); font-family:'Fraunces',serif; font-weight:800; font-size:clamp(20px,3vw,26px); text-shadow:0 2px 6px rgba(0,0,0,.5); margin:0; text-align:center; min-height:1.4em;}
+  .signbtn:active{background:var(--gold);}
+  .numpad-field input{width:80px; padding:9px 6px; font-size:16px; text-align:center; border:1.5px solid var(--card-edge); border-radius:10px; font-family:inherit;}
+  .helper-toggle{background:none; border:none; color:var(--felt); font-size:12px; font-weight:700; text-decoration:underline; font-family:inherit; padding:4px 0;}
+  .counter{display:none; gap:6px; flex-wrap:wrap; padding:8px 0 2px;}
+  .counter.open{display:flex;}
+  .counter button{
+    flex:1; min-width:56px; padding:8px 4px; border:1.5px solid var(--card-edge); border-radius:10px;
+    background:#f8f4e8; font-family:inherit; font-size:12px; font-weight:700; line-height:1.3;
+  }
+  .counter button b{display:block; font-size:14px;}
+  .round-total{margin-top:8px; text-align:right; font-family:'Fraunces',serif; font-weight:800; font-size:18px;}
+  .round-total.neg{color:var(--red);}
+
+  table{width:100%; border-collapse:collapse; font-size:15px;}
+  th,td{padding:7px 4px; text-align:center; border-bottom:1px solid var(--card-edge);}
+  th{font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:#8a8271;}
+  td.neg{color:var(--red); font-weight:600;}
+  tr[data-r]{cursor:pointer;}
+  tr[data-r]:active{background:#f2ecdd;}
+  .edit-hint{font-size:13px; color:#8a8271; margin:0 0 6px;}
+  .winner-banner{
+    background:var(--gold); color:#3a2c08; border-radius:14px; padding:14px; text-align:center;
+    font-family:'Fraunces',serif; font-weight:800; font-size:clamp(20px,3vw,26px); margin-bottom:14px; box-shadow:var(--shadow);
+  }
+  .winner-banner.spareggio{ background:#f0a202; color:#3a2408; }
+
+  /* storico partite */
+  .hist-item{border:1.5px solid var(--card-edge); border-radius:12px; padding:12px; margin-top:10px; background:#fff;}
+  .hist-date{font-size:14px; font-weight:700; color:#8a8271; text-transform:capitalize;}
+  .hist-mode{font-size:13px; color:#8a8271;}
+  .hist-players{margin-top:6px; font-size:16px;}
+  .hist-players .w{font-weight:700; color:var(--ok);}
+  .hist-players .w::after{content:" 🏆";}
+  .hist-group{border:1.5px solid var(--card-edge); border-radius:12px; margin-top:10px; background:#fdfaf1; overflow:hidden;}
+  .hist-group summary{list-style:none; cursor:pointer; padding:13px 14px; font-family:'Fraunces',serif; font-weight:600; font-size:18px; display:flex; align-items:center; gap:8px;}
+  .hist-group summary::-webkit-details-marker{display:none;}
+  .hist-group summary::after{content:"▾"; color:var(--red); margin-left:4px;}
+  .hist-group[open] summary::after{content:"▴";}
+  .hg-count{font-family:'Public Sans',sans-serif; font-size:14px; color:#8a8271; font-weight:600; margin-left:auto;}
+  .hist-group .hist-item{border:none; border-top:1px dashed var(--card-edge); border-radius:0; margin-top:0;}
+  .hist-item summary{list-style:none; cursor:pointer;}
+  .hist-item summary::-webkit-details-marker{display:none;}
+  .hist-hint{font-size:12px; color:var(--felt); font-weight:700; margin-top:6px;}
+  .hist-item[open] .hist-hint .apri{display:none;}
+  .hist-item:not([open]) .hist-hint .chiudi{display:none;}
+  .hist-detail{margin-top:10px; border-top:1px dashed var(--card-edge); padding-top:8px; overflow-x:auto;}
+  .hist-detail h4{font-family:'Fraunces',serif; font-size:15px; margin:10px 0 4px;}
+  .modal{position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50;}
+  .modal.hidden{display:none;}
+  .modal-box{background:var(--card); border-radius:16px; padding:20px; max-width:440px; width:100%; box-shadow:var(--shadow); max-height:80vh; overflow-y:auto;}
+  .modal-box p{margin:0 0 16px; font-size:17px; line-height:1.5;}
+  .modal-btns{display:flex; gap:10px;}
+  .modal-btns .btn{margin-top:0; padding:13px; font-size:16px;}
+  .btn.ghost{background:#efe9d8; color:var(--ink); box-shadow:none;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:2px;}
+  .chip{display:inline-flex; align-items:center; gap:6px; background:#fff; border:1.5px solid var(--card-edge); border-radius:999px; padding:7px 8px 7px 12px; font-size:14px; font-weight:600;}
+  .chip-x{border:none; background:#f3e2df; color:var(--red); width:22px; height:22px; border-radius:50%; font-size:14px; font-weight:700; line-height:1; font-family:inherit;}
+  .hidden{display:none;}
+  .footer-note{text-align:center; color:rgba(250,246,236,.6); font-size:12.5px; margin-top:14px; line-height:1.5;}
+
+  /* ===== DARK MODE (feltro notturno) ===== */
+  html[data-theme="dark"]{
+    --felt:#0f2f22; --felt-dark:#0a2318; --felt-edge:#061710;
+    --card:#20272a; --card-edge:#38424a;
+    --ink:#e9e4d6; --ink-soft:#a9a293;
+    --red:#e0685e; --gold:#e0b24f; --ok:#4bbd7c;
+    --shadow:0 6px 18px rgba(0,0,0,.5);
+  }
+  html[data-theme="dark"] input[type=text],
+  html[data-theme="dark"] input[type=number],
+  html[data-theme="dark"] select.psel{ background:#2a3236; color:var(--ink); }
+  html[data-theme="dark"] .hist-group{ background:#252d30; }
+  html[data-theme="dark"] .hist-item{ background:transparent; }
+  html[data-theme="dark"] .chip{ background:#2a3236; }
+  html[data-theme="dark"] .btn.ghost, html[data-theme="dark"] .btn.secondary{ background:#333c41; color:var(--ink); }
+  html[data-theme="dark"] .chip-x{ background:#4a2d2a; }
+
+  /* ===== TOPBAR (default: visibile su iPhone) ===== */
+  .topbar{
+    position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:4px;
+    background:var(--card); border:1px solid var(--card-edge); border-radius:14px;
+    padding:6px; margin-bottom:14px; box-shadow:var(--shadow);
+  }
+  .topbar .burger{
+    flex:0 0 auto; width:42px; height:42px; border:none; background:transparent;
+    font-size:22px; color:var(--ink); border-radius:10px; cursor:pointer;
+  }
+  .topbar .tabs{display:flex; gap:2px; flex:1; overflow-x:auto; scrollbar-width:none;}
+  .topbar .tabs::-webkit-scrollbar{display:none;}
+  .topbar .tab{
+    flex:1 0 auto; border:none; background:transparent; color:var(--ink-soft);
+    font-family:'Public Sans',sans-serif; font-weight:700; font-size:14px;
+    padding:9px 12px; border-radius:10px; cursor:pointer; white-space:nowrap;
+  }
+  .topbar .tab.on{background:var(--gold); color:#3a2c08;}
+
+  /* ===== SIDEBAR a scomparsa ===== */
+  /* backdrop scuro: usato solo su schermi stretti (iPhone), dove il menu copre */
+  .sidebar-back{position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:40; opacity:0; transition:opacity .25s;}
+  .sidebar-back.hidden{display:none;}
+  .sidebar-back.show{opacity:1;}
+  .sidebar{
+    position:fixed; top:0; bottom:0; z-index:41;
+    width:min(82vw,320px);
+    background:var(--card); box-shadow:-6px 0 24px rgba(0,0,0,.4);
+    transition:transform .28s ease;
+    padding:max(env(safe-area-inset-top),18px) 16px 18px; display:flex; flex-direction:column;
+    overflow-y:auto;
+    /* di default (iPhone) il menu entra da destra sopra il contenuto */
+    right:0; transform:translateX(105%);
+  }
+  .sidebar.open{transform:translateX(0);}
+  .sidebar h3{font-family:'Fraunces',serif; color:var(--gold); font-size:26px; margin:4px 4px 18px;}
+  .sidebar .side-item{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    border:none; background:transparent; color:var(--ink); font-family:inherit;
+    font-size:17px; font-weight:600; padding:14px 12px; border-radius:12px; cursor:pointer;
+  }
+  .sidebar .side-item .ic{font-size:20px; width:26px; text-align:center;}
+  .sidebar .side-item.on{background:var(--gold); color:#3a2c08;}
+
+  /* ===== iPad / PC: da 820px in su ===== */
+  @media (min-width:820px){
+    /* la topbar sparisce: la navigazione è solo nella sidebar destra */
+    .topbar{display:none;}
+    /* pulsante fisso per aprire il menu quando è chiuso */
+    .menu-fab{
+      position:fixed; top:max(env(safe-area-inset-top),16px); right:16px; z-index:39;
+      width:48px; height:48px; border-radius:12px; border:1px solid var(--card-edge);
+      background:var(--card); color:var(--ink); font-size:22px; cursor:pointer; box-shadow:var(--shadow);
+    }
+    /* il contenuto si sposta a sinistra quando il menu è aperto, senza essere coperto */
+    body{ transition:padding-right .28s ease; }
+    body.menu-open{ padding-right:min(82vw,320px); }
+    /* niente velo scuro su desktop: il menu convive con la pagina */
+    body.menu-open .sidebar-back{ display:none; }
+  }
+  /* su iPhone il pulsante fisso non serve (c'è il burger nella topbar) */
+  @media (max-width:819px){
+    .menu-fab{display:none;}
+  }
+
+  /* ===== AVATAR ===== */
+  .avatar{
+    width:46px; height:46px; border-radius:50%; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    background:var(--felt); color:#fff; font-size:22px; font-weight:700;
+    border:2px solid var(--gold); position:relative; cursor:pointer;
+  }
+  .avatar img{width:100%; height:100%; object-fit:cover;}
+  .avatar.sm{width:34px; height:34px; font-size:16px; border-width:1.5px;}
+  .avatar-edit{
+    display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px dashed var(--card-edge);
+  }
+  .avatar-edit .nm{flex:1; font-weight:600; font-size:16px;}
+  .avatar-pick{display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;}
+  .avatar-pick button{
+    width:38px; height:38px; border-radius:50%; border:1.5px solid var(--card-edge);
+    background:#fff; font-size:20px; cursor:pointer;
+  }
+
+  /* ===== GRAFICO ANDAMENTO ===== */
+  .lead-box{
+    background:var(--card); border:1px solid var(--card-edge); border-radius:14px;
+    padding:12px 14px; margin-bottom:14px; box-shadow:var(--shadow);
+  }
+  .lead-box h3{font-family:'Fraunces',serif; font-size:15px; margin:0 0 10px; color:var(--ink-soft); font-weight:600;}
+  .lead-row{display:flex; align-items:center; gap:10px; margin:8px 0;}
+  .lead-row .lead-name{flex:0 0 34%; font-weight:700; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .lead-track{flex:1; height:16px; background:rgba(0,0,0,.12); border-radius:8px; overflow:hidden;}
+  html[data-theme="dark"] .lead-track{background:rgba(255,255,255,.1);}
+  .lead-fill{height:100%; border-radius:8px; transition:width .5s ease; min-width:2px;}
+  .lead-row .lead-val{flex:0 0 auto; font-weight:700; font-size:13px; font-variant-numeric:tabular-nums;}
+  .lead-row.leader .lead-name::after{content:" 👑";}
+
+  /* ===== VELO RIPOSO ===== */
+  .rest-veil{
+    position:fixed; inset:0; background:#000; z-index:60;
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(255,255,255,.5); font-family:'Fraunces',serif; font-size:22px;
+    flex-direction:column; gap:8px; cursor:pointer; text-align:center; padding:20px;
+  }
+  .rest-veil.hidden{display:none;}
+  .rest-veil small{font-family:'Public Sans',sans-serif; font-size:14px; color:rgba(255,255,255,.35);}
+</style>
+</head>
+<body>
+<!-- overlay sidebar -->
+<div id="sidebar-back" class="sidebar-back hidden"></div>
+<nav id="sidebar" class="sidebar" aria-label="Menu">
+  <h3>♠ Burraco</h3>
+  <button class="side-item" data-nav="game"><span class="ic">🎯</span> Partita in corso</button>
+  <button class="side-item" data-nav="setup"><span class="ic">➕</span> Nuova partita</button>
+  <button class="side-item" data-nav="players"><span class="ic">👥</span> Giocatori</button>
+  <button class="side-item" data-nav="history"><span class="ic">🏆</span> Classifiche & storico</button>
+  <button class="side-item" data-nav="regole"><span class="ic">📕</span> Regole del gioco</button>
+  <button class="side-item" data-nav="istruzioni"><span class="ic">📖</span> Come usare l'app</button>
+  <button class="side-item" data-nav="settings"><span class="ic">⚙️</span> Impostazioni</button>
+  <button class="side-item" id="side-rest"><span class="ic">🌙</span> Modalità riposo</button>
+</nav>
+<button id="menu-fab" class="menu-fab" aria-label="Apri menu">☰</button>
+<!-- velo riposo -->
+<div id="rest-veil" class="rest-veil hidden">🌙 Riposo<small>Tocca per riprendere</small></div>
+<span id="body-anchor"></span>
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Burraco</h1>
+  <p class="sub">Segnapunti automatico · 2, 3 o 4 giocatori</p>
+
+  <!-- ===== TOPBAR ===== -->
+  <div class="topbar" id="topbar">
+    <button class="burger" id="btn-burger" aria-label="Apri menu">☰</button>
+    <div class="tabs">
+      <button class="tab" data-nav="game">🎯 Partita</button>
+      <button class="tab" data-nav="players">👥 Giocatori</button>
+      <button class="tab" data-nav="history">🏆 Classifiche</button>
+      <button class="tab" data-nav="settings">⚙️ Impostazioni</button>
+    </div>
+  </div>
+
+  <!-- ===== SETUP ===== -->
+  <div id="screen-setup">
+    <button class="btn gold hidden" id="btn-resume"></button>
+    <div class="panel">
+      <h2><span class="suits">♦♥</span> Modalità <span class="suits" style="color:var(--ink)">♠♣</span> <button class="infob" data-istr="modalita" aria-label="Istruzioni sulle modalità">i</button></h2>
+      <div class="seg" id="seg-mode">
+        <button data-mode="2">2 giocatori<br><small>testa a testa</small></button>
+        <button data-mode="3" class="on">3 giocatori<br><small>1 contro 2</small></button>
+        <button data-mode="4">4 giocatori<br><small>2 coppie</small></button>
+      </div>
+      <div id="names-area"></div>
+      <label>Punteggio di partita <button class="infob" data-istr="traguardo" aria-label="Istruzioni sul punteggio">i</button></label>
+      <div class="seg" id="seg-target">
+        <button data-t="1005">1005</button>
+        <button data-t="2005" class="on">2005</button>
+      </div>
+    </div>
+    <button class="btn" id="btn-start">Inizia la partita</button>
+  </div>
+
+  <!-- ===== ISTRUZIONI ===== -->
+  <div id="screen-istruzioni" class="hidden">
+    <div class="panel">
+      <h2><span class="suits">♥</span> Istruzioni</h2>
+      <div class="istr" id="istr-modalita">
+        <h4>Modalità di gioco</h4>
+        <p><b>2 giocatori</b>: testa a testa, ognuno per sé. <b>3 giocatori</b>: si gioca 1 contro 2 — chi prende il pozzetto da 18 carte continua da solo, gli altri due formano una coppia. <b>4 giocatori</b>: due coppie fisse, Coppia 1 (riquadro giallo) contro Coppia 2 (riquadro arancione).</p>
+      </div>
+      <div class="istr" id="istr-torneo">
+        <h4>Torneo (4 giocatori)</h4>
+        <p>Si giocano 3 partite a 2005 punti e a ogni partita cambiano le coppie, così ognuno gioca una volta con ciascuno. I punti della coppia vanno per intero a entrambi i compagni sul loro conto personale. Vince chi ha il totale individuale più alto dopo le 3 partite. A fine torneo l'app mostra classifica e dettaglio completo.</p>
+      </div>
+      <div class="istr" id="istr-nomi">
+        <h4>Nomi dei giocatori</h4>
+        <p>Scegli i nomi dai menù a tendina. Con «➕ Nuovo nome…» scrivi un nome e, appena confermi, viene salvato nella lista per le prossime volte. Dal pulsante «👥 Lista giocatori» del menu puoi aggiungere o eliminare nomi.</p>
+      </div>
+      <div class="istr" id="istr-mazziere">
+        <h4>Chi dà le carte</h4>
+        <p>Scegli chi dà le carte per primo (o «🎲 A caso»). A ogni smazzata il mazziere ruota automaticamente nell'ordine dei giocatori: inseriscili quindi nell'ordine in cui siedono al tavolo, in senso orario, come da regolamento. L'app indica sempre a chi tocca. A 4 giocatori, scegliendo «A caso», si apre una finestra dove indichi chi gioca: al tuo OK l'app pesca una carta per ciascuno — la più alta dà il mazzo e le due più alte formano una coppia contro le due più basse — e compila da sola coppie e mazziere. Se il sorteggio lo fate con un mazzo vero, componi le coppie a mano e indica tu il mazziere.</p>
+      </div>
+      <div class="istr" id="istr-traguardo">
+        <h4>Punteggio di partita</h4>
+        <p>La partita finisce quando qualcuno raggiunge il traguardo: <b>2005</b> punti è quello classico, <b>1005</b> per partite più corte. Nel torneo il traguardo si imposta da solo a 2005.</p>
+      </div>
+      <div class="istr" id="istr-smazzata">
+        <h4>Registrare una smazzata</h4>
+        <p>Tocca «＋ Nuova smazzata» e compila i punti di ogni giocatore o coppia. Tutto ciò che inserisci si salva da solo: puoi tornare alla partita o chiudere l'app e riprendere dove eri. Per correggere una smazzata già salvata, toccala nell'elenco «Smazzate» e conferma la modifica.</p>
+      </div>
+      <div class="istr" id="istr-burrachi">
+        <h4>I burrachi</h4>
+        <p>Usa i pulsanti − e ＋ per contare i burrachi fatti: <b>pulito 200</b> punti (senza jolly né pinelle), <b>semipulito 150</b> (la matta è in coda e verrà sostituita), <b>sporco 100</b> (con jolly o pinella all'interno).</p>
+      </div>
+      <div class="istr" id="istr-chiusura">
+        <h4>La chiusura</h4>
+        <p>Attiva l'interruttore per chi ha chiuso la smazzata: vale <b>+100</b> punti. Può chiudere una sola linea, e chi chiude ha per forza preso il pozzetto: l'app lo attiva da sola.</p>
+      </div>
+      <div class="istr" id="istr-pozzetto">
+        <h4>Il pozzetto</h4>
+        <p>Attiva «Pozzetto preso» per chi è andato a pozzetto; chi non lo ha preso paga <b>−100</b> punti. Se il pozzetto è stato preso ma non giocato, conta il valore delle sue carte tra le «carte in mano».</p>
+      </div>
+      <div class="istr" id="istr-carte">
+        <h4>Il conteggio delle carte</h4>
+        <p>Valori: Jolly 30 · Pinella (2) 20 · Asso 15 · dal Re all'8 10 punti · dal 7 al 3 5 punti. In «Carte a terra» metti i punti dei giochi calati; in «Carte in mano» i punti da sottrarre. Se preferite il conteggio al netto (mano già scalata dalla terra), scrivi direttamente il netto in «Carte a terra» — col pulsante <b>±</b> lo rendi negativo se serve — e lascia la mano a 0. Il «Contatore carte» somma i valori toccando le carte, senza fare i conti a mente.</p>
+      </div>
+      <div class="istr" id="istr-tre">
+        <h4>La partita a 3</h4>
+        <p>Nella smazzata «1 contro 2» indichi chi ha preso il pozzetto da 18 (il solista): lui incassa tutti i suoi punti, la coppia divide i propri a metà, arrotondando per eccesso al multiplo di 5 (es. 375 → 190 a testa). Superati i 1500 punti l'app propone «Tutti da soli» (3 pozzetti da 11), ma puoi sempre scegliere diversamente.</p>
+      </div>
+      <div class="istr" id="istr-storico">
+        <h4>Storico partite</h4>
+        <p>Ogni partita conclusa si salva con data e ora, raggruppata per mese. Toccala per rivedere tutte le smazzate. «Svuota storico» chiede conferma prima di cancellare. Storico, lista giocatori e partite in corso restano su questo dispositivo.</p>
+      </div>
+    </div>
+    <button class="btn secondary" id="btn-istr-back">← Torna indietro</button>
+  </div>
+
+  <!-- ===== LISTA GIOCATORI ===== -->
+  <div id="screen-players" class="hidden">
+    <div class="panel">
+      <h2><span class="suits">♣</span> Lista giocatori</h2>
+      <label>Aggiungi un giocatore</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="new-player" placeholder="Nome del giocatore" style="flex:1;">
+        <button class="btn" id="btn-add-player" style="width:auto; margin-top:0; padding:12px 18px;">Aggiungi</button>
+      </div>
+      <label style="margin-top:16px;">Giocatori salvati — tocca la × per eliminare</label>
+      <div class="chips" id="roster"></div>
+      <p id="roster-empty" style="color:#8a8271; font-size:13px;">La lista è vuota: aggiungi i nomi qui sopra. Verranno proposti nei menù a tendina quando crei una partita.</p>
+    </div>
+    <button class="btn secondary" id="btn-players-back">← Torna al menu</button>
+  </div>
+
+  <!-- ===== IMPOSTAZIONI ===== -->
+  <div id="screen-settings" class="hidden">
+    <div class="panel">
+      <h2><span class="suits">♠</span> Aspetto</h2>
+      <label>Tema</label>
+      <div class="seg" id="seg-theme">
+        <button data-theme-opt="light">☀️ Chiaro</button>
+        <button data-theme-opt="dark">🌙 Scuro</button>
+        <button data-theme-opt="auto" class="on">🔄 Auto</button>
+      </div>
+      <p style="font-size:13px; color:var(--ink-soft); margin:8px 0 0;">«Auto» segue l'impostazione del dispositivo (chiaro di giorno, scuro di sera).</p>
+    </div>
+    <div class="panel">
+      <h2><span class="suits">♥</span> Durante la partita</h2>
+      <div class="row" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <div><b>Tieni lo schermo acceso</b><br><small style="color:var(--ink-soft);">Impedisce il blocco automatico mentre giochi (Safari a schermo intero).</small></div>
+        <button class="toggle" id="tg-wake"></button>
+      </div>
+      <div class="row" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px;">
+        <div><b>Mostra il grafico «chi è in testa»</b><br><small style="color:var(--ink-soft);">Barre di avanzamento verso il traguardo nel segnapunti.</small></div>
+        <button class="toggle on" id="tg-chart"></button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2><span class="suits">♦</span> Dati</h2>
+      <p style="font-size:14px; color:var(--ink-soft); margin:0 0 12px;">Storico, giocatori e partite in corso restano solo su questo dispositivo.</p>
+      <button class="btn ghost" id="btn-clear-hist" style="margin-top:0;">🗑️ Svuota lo storico partite</button>
+    </div>
+    <button class="btn secondary" id="btn-settings-back">← Torna al menu</button>
+  </div>
+
+  <!-- ===== REGOLE DEL GIOCO ===== -->
+  <div id="screen-regole" class="hidden">
+    <div class="panel">
+      <h2><span class="suits">♦♥♠♣</span> Regole del Burraco</h2>
+      <p style="font-size:13px; color:var(--ink-soft); margin:0 0 14px;">Sintesi basata sul Codice di Gara della Federazione Gioco Burraco (FGB/FIBur). Per il regolamento completo dei tornei fai riferimento al sito ufficiale della federazione.</p>
+
+      <div class="istr">
+        <h4>🎯 Scopo del gioco</h4>
+        <p>Il Burraco si gioca con due mazzi di carte francesi da 54 (comprensivi dei jolly), per un totale di 108 carte. Lo scopo è totalizzare più punti degli avversari calando sul tavolo sequenze e combinazioni, realizzando «burrachi» (gruppi di almeno 7 carte) e chiudendo la smazzata. Si può giocare in 2 (uno contro uno), 3 (uno contro due) o 4 (due coppie).</p>
+      </div>
+
+      <div class="istr">
+        <h4>🃏 Valore delle carte</h4>
+        <p>Jolly 30 · Pinella (2) 20 · Asso 15 · Re, Donna, Fante, 10, 9, 8 valgono 10 · dal 7 al 3 valgono 5. Le stesse carte, se restano in mano a fine smazzata, contano come punti negativi.</p>
+      </div>
+
+      <div class="istr">
+        <h4>🂠 Preparazione</h4>
+        <p>Si formano due pozzetti da 11 carte ciascuno, presi da sotto il mazzo tagliato. A ogni giocatore si distribuiscono 11 carte. Le rimanenti formano il tallone da cui si pesca; una carta scoperta accanto al tallone dà inizio al monte degli scarti.</p>
+      </div>
+
+      <div class="istr">
+        <h4>🔄 Svolgimento del turno</h4>
+        <p>Al proprio turno ogni giocatore: <b>1)</b> pesca una carta dal tallone o raccoglie tutto il monte degli scarti; <b>2)</b> può calare nuove combinazioni o attaccare carte a giochi già aperti; <b>3)</b> scarta una carta, chiudendo il turno. Le aperture richiedono almeno 3 carte: in sequenza dello stesso seme (scala) o dello stesso valore (combinazione).</p>
+      </div>
+
+      <div class="istr">
+        <h4>🎴 I burrachi</h4>
+        <p>Un burraco è un gruppo di almeno 7 carte. Si distingue in: <b>pulito (200)</b> quando non contiene matte (o la pinella è nella sua posizione naturale prima del 3); <b>semipulito (150)</b>, figura introdotta dalla FIBur: 7 carte precedute o seguite da una matta, oppure 8 carte con una matta; <b>sporco (100)</b> quando contiene un jolly o una pinella «non naturale» all'interno.</p>
+      </div>
+
+      <div class="istr">
+        <h4>🥅 Il pozzetto</h4>
+        <p>Quando un giocatore finisce le carte in mano, prende un pozzetto (da 11 carte) e continua a giocare. Chi a fine smazzata non ha preso il pozzetto subisce una penalità di <b>−100 punti</b>. Se entrambe le linee non hanno preso il pozzetto, la penalità non si applica.</p>
+      </div>
+
+      <div class="istr">
+        <h4>🏁 La chiusura</h4>
+        <p>Per chiudere, un giocatore deve aver preso il pozzetto, aver realizzato almeno un burraco, calare tutte le carte e scartare l'ultima. La chiusura regolare vale <b>+100 punti</b>. Dopo la chiusura si contano i punti: valore delle carte calate, più i bonus dei burrachi e della chiusura, meno le carte rimaste in mano e le penalità.</p>
+      </div>
+
+      <div class="istr">
+        <h4>🧮 Il punteggio</h4>
+        <p>Per ogni linea: si sommano i valori delle carte calate a terra e i bonus (burrachi + eventuale chiusura), poi si sottraggono le carte rimaste in mano e la penalità del pozzetto non preso. La partita finisce quando una linea raggiunge il traguardo stabilito (in genere 2005, oppure 1005 o 505 per partite più brevi).</p>
+      </div>
+
+      <div class="istr">
+        <h4>👥 Le varianti 2 e 3 giocatori</h4>
+        <p>In <b>2 giocatori</b> si gioca uno contro uno, ciascuno con i propri pozzetti. In <b>3 giocatori</b> si gioca 1 contro 2: chi prende il pozzetto da 18 carte prosegue da solo e incassa tutti i suoi punti, mentre gli altri due formano coppia e dividono i punti a metà.</p>
+      </div>
+
+      <div class="istr">
+        <h4>🌍 Burraco internazionale</h4>
+        <p>La variante internazionale differisce dal burraco italiano per tre regole: non esiste il burraco semipulito; non si possono aprire combinazioni di carte uguali se non di assi o tre; per chiudere serve almeno un burraco pulito. Questa app segue le regole del <b>burraco italiano</b>.</p>
+      </div>
+    </div>
+    <button class="btn secondary" id="btn-regole-back">← Torna al menu</button>
+  </div>
+
+  <!-- ===== GAME ===== -->
+  <div id="screen-game" class="hidden">
+    <div id="winner-banner" class="winner-banner hidden"></div>
+    <div class="lead-box hidden" id="lead-box"><h3>Chi è in testa</h3><div id="lead-bars"></div></div>
+    <div class="totals" id="totals"></div>
+    <p class="meta-line" id="meta-line"></p>
+    <p class="dealer-line hidden" id="dealer-line"></p>
+    <button class="btn" id="btn-new-round">＋ Nuova smazzata</button>
+
+    <div class="panel hidden" id="tour-panel" style="margin-top:14px;">
+      <h2><span class="suits">♦</span> Classifica individuale del torneo</h2>
+      <div class="mini-tot" id="tour-board"></div>
+      <p style="color:#8a8271; font-size:13px; margin:8px 0 0;">I punti di coppia vanno per intero a entrambi i compagni (aggiornati in tempo reale). Vince chi ha il totale più alto dopo le 3 partite.</p>
+    </div>
+
+    <div class="panel hidden" id="tour-detail-panel" style="margin-top:14px;">
+      <h2><span class="suits">♣</span> <span id="tour-detail-title">Dettaglio del torneo</span></h2>
+      <div class="hist-detail" id="tour-detail" style="border-top:none; margin-top:0; padding-top:0;"></div>
+    </div>
+
+    <div class="panel" id="history-panel" style="margin-top:14px;">
+      <h2><span class="suits">♥</span> Smazzate</h2>
+      <p class="edit-hint hidden" id="edit-hint">✏️ Tocca una smazzata per correggerla.</p>
+      <table id="history-table"></table>
+      <p id="history-empty" style="color:#8a8271; font-size:13px; margin:6px 0 0;">Ancora nessuna smazzata registrata.</p>
+    </div>
+    <button class="btn secondary" id="btn-undo">Annulla ultima smazzata</button>
+    <button class="btn secondary" id="btn-reset">Torna al menu / Nuova partita</button>
+  </div>
+
+  <!-- ===== ROUND ENTRY ===== -->
+  <div id="screen-round" class="hidden">
+    <div class="panel">
+      <h2><span class="suits">♦</span> Smazzata <span id="round-num"></span></h2>
+      <div id="round-forms"></div>
+    </div>
+    <button class="btn" id="btn-save-round">Salva smazzata</button>
+    <button class="btn secondary" id="btn-back-round">← Torna alla partita · i valori restano salvati</button>
+    <button class="btn secondary" id="btn-discard-round">🗑 Scarta questa smazzata</button>
+  </div>
+
+  <!-- ===== STORICO PARTITE ===== -->
+  <div id="screen-history" class="hidden">
+    <div class="panel">
+      <h2><span class="suits">♠</span> Storico partite</h2>
+      <div id="hist-list"></div>
+      <p id="hist-empty" style="color:#8a8271; font-size:13px;">Nessuna partita completata finora. Le partite finite vengono salvate qui automaticamente, con la data.</p>
+    </div>
+    <button class="btn secondary" id="btn-hist-back">← Torna al menu</button>
+    <button class="btn secondary" id="btn-hist-clear">Svuota storico</button>
+  </div>
+
+  <div id="deal-overlay" class="modal hidden">
+    <div class="deal-stage">
+      <div class="deal-stage2" id="deal-stage2"></div>
+      <p class="deal-caption" id="deal-caption">Mescolo le carte…</p>
+      <button class="btn hidden" id="deal-go" style="max-width:320px; width:100%;">Si comincia! 🃏</button>
+    </div>
+  </div>
+
+  <div id="pick-modal" class="modal hidden">
+    <div class="modal-box">
+      <h2 style="font-family:'Fraunces',serif; font-size:20px; margin:0 0 6px;">🎲 Chi gioca?</h2>
+      <p style="font-size:14px; color:#5c5648; margin:0 0 4px;">Scegli i 4 giocatori: al tuo OK l'app pescherà le carte per decidere coppie e mazziere.</p>
+      <div id="pick-selects"></div>
+      <p style="font-size:12px; color:#8a8271; margin:10px 0 12px;">Mancano dei nomi? Aggiungili prima da «👥 Lista giocatori».</p>
+      <div class="modal-btns">
+        <button class="btn ghost" id="pick-annulla">Annulla</button>
+        <button class="btn" id="pick-ok">OK, pesca 🃏</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="info-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="istr" id="info-modal-content" style="padding:0 0 4px;"></div>
+      <div class="modal-btns">
+        <button class="btn ghost" id="info-modal-close">Chiudi</button>
+        <button class="btn" id="info-modal-full">📖 Tutte le istruzioni</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-box">
+      <p id="modal-msg"></p>
+      <div class="modal-btns">
+        <button class="btn ghost" id="modal-no">Annulla</button>
+        <button class="btn" id="modal-yes">Sì, conferma</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="avatar-modal" class="modal hidden">
+    <div class="modal-box">
+      <div id="avatar-modal-body"></div>
+      <div class="modal-btns" style="margin-top:14px;">
+        <button class="btn ghost" id="avatar-modal-close">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">Valori carte: Jolly 30 · Pinella (2) 20 · Asso 15 · K–8 10 · 7–3 5<br>
+  Pulito +200 · Sporco +100 · Chiusura +100 · Pozzetto non preso −100<br>
+  In 3 giocatori: il solista incassa tutti i punti, la coppia li divide a metà.<br>
+  💾 Partita in corso e storico vengono salvati automaticamente su questo dispositivo.<br>
+  Burraco Segnapunti · <b>Versione 15</b> · luglio 2026</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  // ---------- stato ----------
+  let mode = 3;                 // 2, 3 o 4
+  let target = 2005;
+  const useSemi = true;         // burraco semipulito (150) sempre disponibile
+  let teams = [];               // [{name, total}]
+  let rounds = [];              // [[pts,...]]
+  let roundData = [];
+  let editIdx = null;           // null = nuova smazzata, numero = modifica di quella smazzata
+  let roundType = "1v2";        // solo per mode 3
+  let soloIdx = 0;
+  let gameOver = false;
+  let spareggio = false;        // true quando c'è parità sopra soglia e serve una smazzata di spareggio
+  let startedAt = null;
+  let players = [];             // giocatori fisici (per la rotazione del mazziere)
+  let firstDealer = 0;          // indice del primo mazziere
+  let gameType = "libera";      // a 4 giocatori: "libera" (partita singola) oppure "torneo" (3 partite)
+  let tour = null;              // stato del torneo: {partita, ind[4], vinte[4]}
+  const COMBOS = [[0,1,2,3],[0,2,1,3],[0,3,1,2]];  // abbinamenti delle 3 partite del torneo
+
+  const LS_HIST = "burraco_storico";
+  const LS_CUR  = "burraco_partita_corrente";
+  const LS_NAMES = "burraco_nomi";
+  const LS_DRAFT = "burraco_smazzata_bozza";
+  const LS_SETT = "burraco_impostazioni";
+  const LS_AVATAR = "burraco_avatar";      // { "nome": "😀" | "data:image/..." }
+  const SOGLIA_TUTTI_SOLI = 1500;   // a 3 giocatori: oltre questa soglia si propone «tutti da soli»
+
+  // ---------- storage sicuro (se non disponibile, l'app funziona lo stesso) ----------
+  function lsGet(k){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+  function saveCurrent(){
+    if(gameOver){ lsDel(LS_CUR); return; }
+    lsSet(LS_CUR, {mode, target, useSemi, teams, rounds, startedAt, players, firstDealer, gameType, tour, spareggio});
+  }
+  function saveDraft(){ lsSet(LS_DRAFT, {startedAt, roundData, editIdx, roundType, soloIdx}); }
+  function clearDraft(){ lsDel(LS_DRAFT); }
+  function getDraft(){
+    const dr = lsGet(LS_DRAFT);
+    return (dr && dr.startedAt===startedAt && dr.roundData && dr.roundData.length) ? dr : null;
+  }
+  function pushHistory(){
+    const hist = lsGet(LS_HIST) || [];
+    const max = Math.max(...teams.map(t=>t.total));
+    const winners = teams.filter(t=>t.total===max).map(t=>t.name);
+    hist.unshift({
+      data: Date.now(),
+      mode, target, tipo: gameType,
+      giocatori: teams.map(t=>({name:t.name, total:t.total})),
+      vincitore: winners.join(" e "),
+      smazzate: rounds.map(r=>ptsOf(r))
+    });
+    if(hist.length>200) hist.length = 200;
+    lsSet(LS_HIST, hist);
+  }
+
+  const $ = id => document.getElementById(id);
+  // finestra di conferma interna (piu' affidabile di confirm() nell'app installata)
+  let modalYes = null;
+  function showConfirm(msg, onYes, yesLabel){
+    $("modal-msg").textContent = msg;
+    $("modal-yes").textContent = yesLabel || "S\u00ec, conferma";
+    $("modal-no").classList.remove("hidden");
+    modalYes = onYes;
+    $("modal").classList.remove("hidden");
+  }
+  function showAlert(msg){
+    $("modal-msg").textContent = msg;
+    $("modal-yes").textContent = "OK";
+    $("modal-no").classList.add("hidden");
+    modalYes = null;
+    $("modal").classList.remove("hidden");
+  }
+  const screens = {setup:$("screen-setup"), game:$("screen-game"), round:$("screen-round"), history:$("screen-history"), players:$("screen-players"), istruzioni:$("screen-istruzioni"), settings:$("screen-settings"), regole:$("screen-regole")};
+  let currentScreen = "setup";
+  let returnFromIstr = "setup";
+  function show(name){
+    currentScreen = name;
+    for(const k in screens) screens[k].classList.toggle("hidden", k!==name);
+    syncNav(name);
+    window.scrollTo(0,0);
+  }
+  // ---- navigazione unificata topbar + sidebar ----
+  // le schede/voci puntano a: game, setup, players, history, settings, istruzioni
+  function navTo(dest){
+    if(!isDesktop()) closeSidebar();
+    if(dest==="game"){
+      // "Partita": se c'è una partita in corso vai lì, altrimenti alla schermata nuova partita
+      const cur = lsGet(LS_CUR);
+      if(cur && cur.rounds){ resumeCurrent(); }
+      else { renderNames(); checkResume(); show("setup"); }
+      return;
+    }
+    if(dest==="setup"){ renderNames(); checkResume(); show("setup"); return; }
+    if(dest==="players"){ renderRoster(); show("players"); return; }
+    if(dest==="history"){ renderHistory(); show("history"); return; }
+    if(dest==="settings"){ renderSettings(); show("settings"); return; }
+    if(dest==="regole"){ show("regole"); return; }
+    if(dest==="istruzioni"){ openIstruzioni(); return; }
+  }
+  // evidenzia la scheda/voce attiva; "game","setup","round" contano tutti come "Partita"
+  function syncNav(name){
+    const groups = { game:"game", setup:"game", round:"game", players:"players", history:"history", settings:"settings", istruzioni:"istruzioni", regole:"regole" };
+    const g = groups[name] || "";
+    document.querySelectorAll(".topbar .tab").forEach(t=>t.classList.toggle("on", t.dataset.nav===g));
+    document.querySelectorAll(".sidebar .side-item").forEach(t=>t.classList.toggle("on", t.dataset.nav===g));
+  }
+  // ---- sidebar ----
+  function isDesktop(){ return window.matchMedia("(min-width:820px)").matches; }
+  function openSidebar(){
+    $("sidebar").classList.add("open");
+    document.body.classList.add("menu-open");
+    if(!isDesktop()){
+      $("sidebar-back").classList.remove("hidden");
+      requestAnimationFrame(()=>$("sidebar-back").classList.add("show"));
+    }
+  }
+  function closeSidebar(){
+    $("sidebar").classList.remove("open");
+    document.body.classList.remove("menu-open");
+    $("sidebar-back").classList.remove("show");
+    setTimeout(()=>$("sidebar-back").classList.add("hidden"), 260);
+  }
+  function toggleSidebar(){ $("sidebar").classList.contains("open") ? closeSidebar() : openSidebar(); }
+  $("btn-burger").addEventListener("click", toggleSidebar);
+  $("menu-fab").addEventListener("click", toggleSidebar);
+  $("sidebar-back").addEventListener("click", closeSidebar);
+  // se cambia la dimensione/orientamento con il menu aperto, riallinea backdrop e push
+  window.addEventListener("resize", ()=>{
+    if($("sidebar").classList.contains("open")){
+      if(isDesktop()){
+        $("sidebar-back").classList.remove("show"); $("sidebar-back").classList.add("hidden");
+        document.body.classList.add("menu-open");
+      }else{
+        document.body.classList.remove("menu-open");
+        $("sidebar-back").classList.remove("hidden");
+        requestAnimationFrame(()=>$("sidebar-back").classList.add("show"));
+      }
+    }
+  });
+  document.querySelectorAll("[data-nav]").forEach(b=>{
+    b.addEventListener("click", ()=>navTo(b.dataset.nav));
+  });
+  function openIstruzioni(id){
+    if(currentScreen!=="istruzioni") returnFromIstr = currentScreen;
+    show("istruzioni");
+    document.querySelectorAll(".istr").forEach(x=>x.classList.remove("evid"));
+    const el = id ? $("istr-"+id) : null;
+    if(el){
+      el.classList.add("evid");
+      setTimeout(()=>el.scrollIntoView({behavior:"smooth", block:"start"}), 60);
+      setTimeout(()=>el.classList.remove("evid"), 4000);
+    }
+  }
+  // estrazione animata: ogni giocatore pesca una carta, la più alta dà il mazzo (come da regolamento)
+  let dealDone = null;
+  function rnd(n){
+    if(window.crypto && crypto.getRandomValues){
+      const u = new Uint32Array(1); crypto.getRandomValues(u);
+      return u[0] % n;
+    }
+    return Math.floor(Math.random()*n);
+  }
+  // ================= IMPOSTAZIONI, TEMA, WAKE LOCK, RIPOSO =================
+  const defaultSett = { theme:"auto", wake:false, chart:true };
+  function getSett(){ return Object.assign({}, defaultSett, lsGet(LS_SETT) || {}); }
+  function setSett(patch){ const s = Object.assign(getSett(), patch); lsSet(LS_SETT, s); return s; }
+
+  function applyTheme(theme){
+    const root = document.documentElement;
+    if(theme==="auto"){
+      const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      root.setAttribute("data-theme", dark ? "dark" : "light");
+    }else{
+      root.setAttribute("data-theme", theme);
+    }
+  }
+  // reagisci ai cambi di tema di sistema quando si è in "auto"
+  if(window.matchMedia){
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ()=>{
+      if(getSett().theme==="auto") applyTheme("auto");
+    });
+  }
+
+  // --- Wake Lock (tieni schermo acceso) ---
+  let wakeLock = null;
+  async function requestWake(){
+    try{
+      if("wakeLock" in navigator){
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", ()=>{ wakeLock = null; });
+      }
+    }catch(e){ /* non supportato o negato: l'app funziona lo stesso */ }
+  }
+  async function releaseWake(){
+    try{ if(wakeLock){ await wakeLock.release(); wakeLock = null; } }catch(e){}
+  }
+  function updateWake(){
+    if(getSett().wake) requestWake(); else releaseWake();
+  }
+  // se torni all'app dopo averla lasciata, ripristina il wake lock (iOS lo rilascia in background)
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState==="visible" && getSett().wake) requestWake();
+  });
+
+  // --- Modalità riposo (velo scuro, un tocco per riprendere) ---
+  function enterRest(){ $("rest-veil").classList.remove("hidden"); }
+  $("rest-veil").addEventListener("click", ()=>$("rest-veil").classList.add("hidden"));
+  $("side-rest").addEventListener("click", ()=>{ closeSidebar(); enterRest(); });
+
+  function renderSettings(){
+    const s = getSett();
+    document.querySelectorAll("#seg-theme button").forEach(b=>b.classList.toggle("on", b.dataset.themeOpt===s.theme));
+    $("tg-wake").classList.toggle("on", !!s.wake);
+    $("tg-chart").classList.toggle("on", !!s.chart);
+  }
+  document.querySelectorAll("#seg-theme button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const s = setSett({theme:b.dataset.themeOpt});
+      applyTheme(s.theme);
+      renderSettings();
+    });
+  });
+  $("tg-wake").addEventListener("click", ()=>{
+    const s = setSett({wake: !getSett().wake});
+    $("tg-wake").classList.toggle("on", s.wake);
+    updateWake();
+  });
+  $("tg-chart").addEventListener("click", ()=>{
+    const s = setSett({chart: !getSett().chart});
+    $("tg-chart").classList.toggle("on", s.chart);
+    if(currentScreen==="game") renderLeadChart();
+  });
+
+  // ================= AVATAR (emoji o foto) =================
+  const EMOJI_SET = ["😀","😎","🤠","🐱","🐶","🦊","🦁","🐼","🐸","🦉","🌟","🍀","🔥","🎩","👑","🃏","♠️","♥️","♦️","♣️"];
+  function getAvatars(){ return lsGet(LS_AVATAR) || {}; }
+  function setAvatar(name, val){ const a = getAvatars(); if(val) a[name]=val; else delete a[name]; lsSet(LS_AVATAR, a); }
+  function avatarFor(name){ return getAvatars()[name] || null; }
+  function avatarHTML(name, extraClass){
+    const v = avatarFor(name);
+    const cls = "avatar" + (extraClass ? " "+extraClass : "");
+    if(v && v.startsWith("data:")) return `<span class="${cls}"><img src="${v}" alt=""></span>`;
+    if(v) return `<span class="${cls}">${v}</span>`;
+    const initial = (name||"?").trim().charAt(0).toUpperCase() || "?";
+    return `<span class="${cls}">${esc(initial)}</span>`;
+  }
+  // comprimi una foto a ~150px prima di salvarla (per non riempire localStorage)
+  function compressImage(file, cb){
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const size = 150;
+        const c = document.createElement("canvas");
+        c.width = size; c.height = size;
+        const ctx = c.getContext("2d");
+        const min = Math.min(img.width, img.height);
+        const sx = (img.width-min)/2, sy = (img.height-min)/2;
+        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+        cb(c.toDataURL("image/jpeg", 0.7));
+      };
+      img.onerror = ()=>cb(null);
+      img.src = e.target.result;
+    };
+    reader.onerror = ()=>cb(null);
+    reader.readAsDataURL(file);
+  }
+  // apre un piccolo selettore avatar (emoji + carica foto) per un nome
+  function openAvatarPicker(name){
+    const box = $("avatar-modal-body");
+    box.innerHTML =
+      `<p style="margin:0 0 10px;">Avatar di <b>${esc(name)}</b></p>
+       <div class="avatar-pick" id="ap-emojis">${EMOJI_SET.map(e=>`<button data-e="${e}">${e}</button>`).join("")}</div>
+       <label style="margin-top:14px;">Oppure una foto</label>
+       <input type="file" accept="image/*" id="ap-file" style="width:100%;">
+       <button class="btn ghost" id="ap-clear" style="margin-top:12px;">Rimuovi avatar</button>`;
+    $("avatar-modal").classList.remove("hidden");
+    box.querySelectorAll("#ap-emojis button").forEach(b=>{
+      b.addEventListener("click", ()=>{ setAvatar(name, b.dataset.e); closeAvatarPicker(); refreshAvatarViews(); });
+    });
+    $("ap-file").addEventListener("change", ev=>{
+      const f = ev.target.files && ev.target.files[0];
+      if(!f) return;
+      compressImage(f, data=>{
+        if(data){ setAvatar(name, data); closeAvatarPicker(); refreshAvatarViews(); }
+        else showAlert("Non sono riuscito a leggere l'immagine. Prova con un'altra foto.");
+      });
+    });
+    $("ap-clear").addEventListener("click", ()=>{ setAvatar(name, null); closeAvatarPicker(); refreshAvatarViews(); });
+  }
+  function closeAvatarPicker(){ $("avatar-modal").classList.add("hidden"); }
+  function refreshAvatarViews(){
+    if(currentScreen==="players") renderRoster();
+    if(currentScreen==="game") renderGame();
+  }
+
+  // ================= GRAFICO "CHI È IN TESTA" =================
+  const PAIR_COLORS = ["#d9a441","#e08a3c","#3f88c5","#8f4fbf"];
+  function renderLeadChart(){
+    const box = $("lead-box");
+    const on = getSett().chart && !gameOver && teams.length && rounds.length>0;
+    box.classList.toggle("hidden", !on);
+    if(!on) return;
+    const maxTot = Math.max(target, ...teams.map(t=>t.total), 1);
+    const leadVal = Math.max(...teams.map(t=>t.total));
+    $("lead-bars").innerHTML = teams.map((t,i)=>{
+      const pct = Math.max(0, Math.min(100, (t.total/maxTot)*100));
+      const isLead = t.total===leadVal && teams.filter(x=>x.total===leadVal).length===1;
+      const col = PAIR_COLORS[i % PAIR_COLORS.length];
+      return `<div class="lead-row ${isLead?"leader":""}">
+        <div class="lead-name">${avatarHTML(t.name,"sm")} ${esc(t.name)}</div>
+        <div class="lead-track"><div class="lead-fill" style="width:${pct}%; background:${col};"></div></div>
+        <div class="lead-val">${t.total}</div>
+      </div>`;
+    }).join("");
+  }
+
+  const RANKS = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+  const SUITS = [["♥","red"],["♦","red"],["♣","blk"],["♠","blk"]];
+  function showDealerAnimation(idx, done, preset, extraText, nomi){
+    dealDone = done;
+    const nm = (nomi && nomi.length) ? nomi : players;
+    const ov = $("deal-overlay"), stage = $("deal-stage2");
+    ov.classList.remove("hidden");
+    $("deal-go").classList.add("hidden");
+    $("deal-caption").textContent = "Mescolo le carte…";
+    const F = 13, n = nm.length;
+    let cards;
+    if(preset){
+      cards = preset;   // carte già pescate (a 4 giocatori decidono anche le coppie)
+    }else{
+      // valori tutti diversi, così la carta più alta è una sola: quella del prescelto
+      const pool = RANKS.map((r,i)=>i);
+      for(let k=pool.length-1;k>0;k--){ const j=rnd(k+1); [pool[k],pool[j]]=[pool[j],pool[k]]; }
+      const vals = pool.slice(0, n);
+      const maxPos = vals.indexOf(Math.max(...vals));
+      [vals[idx], vals[maxPos]] = [vals[maxPos], vals[idx]];
+      cards = vals.map(v=>{
+        const su = SUITS[rnd(SUITS.length)];
+        return {rank: RANKS[v], suit: su[0], col: su[1]};
+      });
+    }
+    // posizioni del ventaglio da cui usciranno le carte, ben distribuite
+    const sel = [];
+    for(let i=0;i<n;i++) sel.push(Math.round((F-1)*(i+0.5)/n));
+    // costruisco il mazzo: 13 carte coperte impilate al centro
+    stage.innerHTML = Array.from({length:F}, (_,f)=>{
+      const pi = sel.indexOf(f);   // se >=0, questa carta appartiene al giocatore pi
+      const front = pi>=0 ? `<span>${cards[pi].rank}</span><span class="suitchar">${cards[pi].suit}</span><span class="nm">${esc(nm[pi])}</span>` : "";
+      const col = pi>=0 ? cards[pi].col : "";
+      return `<div class="fan-card" id="fan-${f}"><div class="flip-inner" id="fli-${f}">
+        <div class="flip-back">♠♥<br>♦♣</div>
+        <div class="flip-front ${col}">${front}</div>
+      </div></div>`;
+    }).join("");
+    // 1) il mazzo si apre a ventaglio
+    setTimeout(()=>{
+      for(let f=0; f<F; f++){
+        const el = $("fan-"+f);
+        el.style.transitionDelay = (f*45)+"ms";
+        el.style.transform = "rotate("+((f-(F-1)/2)*9)+"deg)";
+      }
+    }, 300);
+    // 2) le carte scelte scivolano fuori dal ventaglio verso il tavolo
+    const W = stage.clientWidth || 360;
+    const tEstrai = 1650;
+    setTimeout(()=>{ $("deal-caption").textContent = "Ognuno pesca la sua carta…"; }, tEstrai-150);
+    sel.forEach((f,i)=>{
+      setTimeout(()=>{
+        const el = $("fan-"+f);
+        el.classList.add("picked");
+        el.style.transitionDelay = "0ms";
+        const dx = W*((i+1)/(n+1)) - W/2;
+        el.style.transform = "translate("+dx.toFixed(0)+"px, 225px) rotate(0deg) scale(1.45)";
+      }, tEstrai + i*450);
+    });
+    // 3) il resto del mazzo sfuma, le carte pescate si girano una alla volta
+    const tFlip = tEstrai + n*450 + 600;
+    setTimeout(()=>{
+      for(let f=0; f<F; f++){ if(sel.indexOf(f)<0) $("fan-"+f).classList.add("dim"); }
+    }, tFlip - 250);
+    sel.forEach((f,i)=>{
+      setTimeout(()=>{ const fi=$("fli-"+f); if(fi) fi.style.transform = "rotateY(180deg)"; }, tFlip + i*800);
+    });
+    // 4) la carta più alta si accende e decreta il mazziere
+    setTimeout(()=>{
+      const wf = $("fan-"+sel[idx]);
+      if(wf){ wf.classList.add("win"); wf.style.transform += " scale(1.06)"; }
+      $("deal-caption").innerHTML = "🃏 Carta più alta: le dà "+esc(nm[idx])+"!"+
+        (extraText ? "<br><span style='font-size:.7em; font-weight:600;'>"+extraText+"</span>" : "");
+      $("deal-go").classList.remove("hidden");
+    }, tFlip + n*800 + 500);
+  }
+  $("deal-go").addEventListener("click",()=>{
+    $("deal-overlay").classList.add("hidden");
+    if(dealDone){ const f = dealDone; dealDone = null; f(); }
+  });
+
+  // finestra «Chi gioca?» (4 giocatori, scelta «A caso»)
+  function openPickModal(){
+    const names = savedNames();
+    $("pick-selects").innerHTML = [0,1,2,3].map(i=>`
+      <label>Giocatore ${i+1}</label>
+      <select id="psel-${i}" class="psel">
+        <option value="">— Scegli dalla lista —</option>
+        ${names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("")}
+      </select>`).join("");
+    // precompila con le scelte già presenti nei riquadri delle coppie
+    for(let i=0;i<4;i++){
+      const v = slotValue("sel-"+i), ps = $("psel-"+i);
+      if(v && [...ps.options].some(o=>o.value===v)) ps.value = v;
+    }
+    $("pick-modal").classList.remove("hidden");
+  }
+  $("pick-annulla").addEventListener("click",()=>{
+    $("pick-modal").classList.add("hidden");
+    const ds = $("sel-dealer"); if(ds) ds.value = "";   // si torna alla scelta manuale
+  });
+  $("pick-ok").addEventListener("click",()=>{
+    const nomi = [];
+    for(let i=0;i<4;i++) nomi.push(($("psel-"+i).value||"").trim() || ("Giocatore "+(i+1)));
+    const dup = nomi.find((v,i)=>nomi.indexOf(v)!==i);
+    if(dup){ showAlert("Attenzione: \""+dup+"\" è stato selezionato più di una volta."); return; }
+    $("pick-modal").classList.add("hidden");
+    // pescata: valori tutti diversi, ordinati dal più alto
+    const pool = RANKS.map((r,i)=>i);
+    for(let k=pool.length-1;k>0;k--){ const j=rnd(k+1); [pool[k],pool[j]]=[pool[j],pool[k]]; }
+    const vals = pool.slice(0,4);
+    const pesca = nomi.map((nm,i)=>{
+      const su = SUITS[rnd(SUITS.length)];
+      return {nome:nm, val:vals[i], rank:RANKS[vals[i]], suit:su[0], col:su[1]};
+    });
+    const winnerIdx = pesca.reduce((m,p,i,a)=>a[i].val>a[m].val?i:m, 0);
+    const carte = pesca.map(p=>({rank:p.rank, suit:p.suit, col:p.col}));   // stesso ordine dei nomi scelti
+    const ordinati = [...pesca].sort((a,b)=>b.val-a.val).map(p=>p.nome);   // riordino solo per formare le coppie
+    const coppieText = "Coppie: "+esc(ordinati[0])+" & "+esc(ordinati[1])+" contro "+esc(ordinati[2])+" & "+esc(ordinati[3]);
+    showDealerAnimation(winnerIdx, ()=>applyPick(ordinati), carte, coppieText, nomi);
+    $("deal-go").textContent = "OK, imposta così ✓";
+  });
+  function applyPick(ordinati){
+    // compila i riquadri delle coppie nell'ordine della pescata e il mazziere
+    for(let i=0;i<4;i++){
+      const sel = $("sel-"+i);
+      if(!sel) continue;
+      if(![...sel.options].some(o=>o.value===ordinati[i])){
+        const opt = document.createElement("option");
+        opt.value = ordinati[i]; opt.textContent = ordinati[i];
+        sel.insertBefore(opt, sel.querySelector('option[value="__new__"]'));
+      }
+      sel.value = ordinati[i];
+      const nn = $("sel-"+i+"-new"); if(nn) nn.classList.add("hidden");
+    }
+    refreshDealerOptions();
+    const ds = $("sel-dealer"); if(ds) ds.value = "0";   // la carta più alta dà il mazzo
+  }
+
+  // finestra rapida: mostra solo la sezione richiesta, senza lasciare la schermata
+  let infoCurrent = null;
+  function openInfoPopup(id){
+    const src = $("istr-"+id);
+    if(!src){ openIstruzioni(null); return; }
+    infoCurrent = id;
+    $("info-modal-content").innerHTML = src.innerHTML;
+    $("info-modal").classList.remove("hidden");
+  }
+  // le ⓘ funzionano ovunque, anche nelle schermate ricostruite dinamicamente
+  document.addEventListener("click", e=>{
+    const b = e.target.closest(".infob");
+    if(b){ e.preventDefault(); e.stopPropagation(); openInfoPopup(b.dataset.istr); }
+  }, true);
+  $("info-modal-close").addEventListener("click",()=>$("info-modal").classList.add("hidden"));
+  $("info-modal").addEventListener("click",e=>{ if(e.target===$("info-modal")) $("info-modal").classList.add("hidden"); });
+  $("info-modal-full").addEventListener("click",()=>{
+    $("info-modal").classList.add("hidden");
+    openIstruzioni(infoCurrent);
+  });
+  $("modal-no").addEventListener("click",()=>{ $("modal").classList.add("hidden"); modalYes=null; });
+  $("modal-yes").addEventListener("click",()=>{ $("modal").classList.add("hidden"); const f=modalYes; modalYes=null; if(f) f(); });
+  function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function fmtDate(ts){
+    const d = new Date(ts);
+    return d.toLocaleDateString("it-CH",{weekday:"short", day:"numeric", month:"long", year:"numeric"})
+      + " · " + d.toLocaleTimeString("it-CH",{hour:"2-digit", minute:"2-digit"});
+  }
+  const modeLabel = (m, tipo) => m===2 ? "2 giocatori" : (m===3 ? "3 giocatori" : (tipo==="torneo" ? "Torneo a 4 (coppie a rotazione)" : "4 giocatori (coppie)"));
+
+  // ---------- setup ----------
+  function savedNames(){ return lsGet(LS_NAMES) || []; }
+  const isDefaultName = v => /^(Giocatore|Coppia) \d+$/.test(v);
+
+  function selectHTML(id,label){
+    const names = savedNames();
+    return `<label>${label}</label>
+    <select id="${id}" class="psel">
+      <option value="">— Scegli dalla lista —</option>
+      ${names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("")}
+      <option value="__new__">➕ Nuovo nome…</option>
+    </select>
+    <input type="text" id="${id}-new" class="hidden" placeholder="Scrivi il nuovo nome" style="margin-top:6px;">`;
+  }
+
+  function renderNames(){
+    const area = $("names-area");
+    let html = "";
+    if(mode===4){
+      html += `<label>Tipo di gioco <button class="infob" data-istr="torneo" aria-label="Istruzioni sul torneo">i</button></label>
+      <div class="seg" id="seg-gtype">
+        <button data-gt="libera" class="${gameType==="libera"?"on":""}">Partita singola<br><small>coppie fisse</small></button>
+        <button data-gt="torneo" class="${gameType==="torneo"?"on":""}">🏆 Torneo<br><small>3 partite · coppie a rotazione</small></button>
+      </div>
+      <p style="font-size:12px;color:#8a8271;margin:6px 0 0;">Nel torneo si giocano 3 partite e a ogni partita cambiano le coppie, così ognuno gioca con tutti. I punti di coppia vanno per intero a entrambi i compagni: vince chi ha il totale individuale più alto alla fine.</p>`;
+    }
+    if(mode===4){
+      // a 4 giocatori il mazziere si decide prima delle coppie
+      html += `<label>🃏 Chi dà le carte per primo? <button class="infob" data-istr="mazziere" aria-label="Istruzioni sul mazziere">i</button></label>
+      <select id="sel-dealer" class="psel"></select>
+      <p style="font-size:13px;color:#8a8271;margin:6px 0 0;">🎲 Scegliendo «A caso» si apre una finestra dove indichi chi gioca: al tuo OK l'app pesca le carte e compila da sola coppie e mazziere. Se il sorteggio lo fate con un mazzo vero, scegli tu il mazziere e componi le coppie qui sotto.</p>`;
+      html += `<div class="pair-box pair-1"><h3>🟡 Coppia 1</h3>`+
+        selectHTML("sel-0","Primo giocatore")+
+        selectHTML("sel-1","Secondo giocatore")+
+      `</div>`;
+      html += `<div class="pair-box pair-2"><h3>🟠 Coppia 2</h3>`+
+        selectHTML("sel-2","Primo giocatore")+
+        selectHTML("sel-3","Secondo giocatore")+
+      `</div>`;
+    }else{
+      // a 2 e 3 giocatori: prima i nomi, poi il mazziere (come in origine)
+      for(let i=0;i<mode;i++) html += selectHTML("sel-"+i,"Giocatore "+(i+1));
+      html += `<label>🃏 Chi dà le carte per primo? <button class="infob" data-istr="mazziere" aria-label="Istruzioni sul mazziere">i</button></label>
+      <select id="sel-dealer" class="psel"></select>
+      <p style="font-size:13px;color:#8a8271;margin:6px 0 0;">Consiglio: inserisci i giocatori nell'ordine in cui siedono al tavolo (in senso orario): il mazziere ruoterà nello stesso ordine, come da regolamento. Con «🎲 A caso» sarà l'app a pescare le carte.</p>`;
+    }
+    if(savedNames().length===0){
+      html += `<p style="font-size:12px;color:#8a8271;margin:8px 0 0;">Suggerimento: crea prima la tua lista con il pulsante «👥 Lista giocatori», oppure scegli «➕ Nuovo nome…» nei menù.</p>`;
+    }
+    area.innerHTML = html;
+    area.querySelectorAll("#seg-gtype button").forEach(b=>{
+      b.addEventListener("click",()=>{
+        gameType = b.dataset.gt;
+        area.querySelectorAll("#seg-gtype button").forEach(x=>x.classList.toggle("on", x===b));
+        if(gameType==="torneo"){
+          target = 2005;   // traguardo classico di ogni partita del torneo, modificabile
+          document.querySelectorAll("#seg-target button").forEach(x=>x.classList.toggle("on", x.dataset.t==="2005"));
+        }
+      });
+    });
+    area.querySelectorAll("select.psel").forEach(sel=>{
+      if(sel.id==="sel-dealer"){
+        sel.addEventListener("change",()=>{ if(mode===4 && sel.value==="rand") openPickModal(); });
+        return;
+      }
+      sel.addEventListener("change",()=>{
+        const nn = $(sel.id+"-new");
+        if(nn) nn.classList.toggle("hidden", sel.value!=="__new__");
+        refreshDealerOptions();
+      });
+    });
+    area.querySelectorAll("input[id$='-new']").forEach(inp=>{
+      inp.addEventListener("input", refreshDealerOptions);
+      // alla conferma (Invio o tocco fuori dalla casella) il nome entra subito in lista
+      inp.addEventListener("change", ()=>{
+        const n = (inp.value||"").trim();
+        if(!n) return;
+        const arr = savedNames();
+        // se esiste già (anche con maiuscole diverse) usa la versione già in lista
+        const canon = arr.find(x=>x.toLowerCase()===n.toLowerCase()) || n;
+        if(!arr.includes(canon)){
+          arr.push(canon);
+          if(arr.length>50) arr.length = 50;
+          lsSet(LS_NAMES, arr);
+        }
+        // aggiungi l'opzione a tutti i menu a tendina senza perdere le scelte già fatte
+        area.querySelectorAll("select.psel").forEach(s=>{
+          if(s.id==="sel-dealer") return;
+          if(![...s.options].some(o=>o.value===canon)){
+            const opt = document.createElement("option");
+            opt.value = canon; opt.textContent = canon;
+            s.insertBefore(opt, s.querySelector('option[value="__new__"]'));
+          }
+        });
+        // seleziona il nome nel menu corrispondente e nascondi la casella
+        const sel = $(inp.id.replace(/-new$/,""));
+        sel.value = canon;
+        inp.value = "";
+        inp.classList.add("hidden");
+        refreshDealerOptions();
+      });
+    });
+    refreshDealerOptions();
+  }
+
+  function slotValue(id){
+    const sel = $(id);
+    if(!sel) return "";
+    if(sel.value==="__new__") return ($(id+"-new").value||"").trim();
+    return sel.value;
+  }
+  function slotCount(){ return mode===4 ? 4 : mode; }
+  function slotFallback(i){ return mode===4 ? "Giocatore "+(i+1)+" (coppia "+(i<2?1:2)+")" : "Giocatore "+(i+1); }
+  function refreshDealerOptions(){
+    const sel = $("sel-dealer"); if(!sel) return;
+    const prev = sel.value;
+    let opts = (mode===4) ? `<option value="">— Scegli —</option>` : "";
+    opts += `<option value="rand">🎲 A caso</option>`;
+    for(let i=0;i<slotCount();i++){
+      opts += `<option value="${i}">${esc(slotValue("sel-"+i) || slotFallback(i))}</option>`;
+    }
+    sel.innerHTML = opts;
+    if([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+  }
+  function dealerFor(n){
+    if(!players.length) return "";
+    return players[(firstDealer + n) % players.length];
+  }
+  function currentDealer(){ return dealerFor(rounds.length); }
+  function buildTeamsFromPairing(p){
+    const c = COMBOS[p];
+    teams = [
+      {name: players[c[0]]+" & "+players[c[1]], total:0},
+      {name: players[c[2]]+" & "+players[c[3]], total:0}
+    ];
+  }
+  function chiudiPartitaTorneo(){
+    // memorizza il dettaglio delle smazzate di questa partita
+    tour.storia = tour.storia || [];
+    tour.storia.push({coppie: teams.map(t=>t.name), smazzate: rounds.map(r=>ptsOf(r))});
+    const c = COMBOS[tour.partita];
+    // accredita i totali di coppia al conto individuale di entrambi i compagni
+    tour.ind[c[0]] += teams[0].total; tour.ind[c[1]] += teams[0].total;
+    tour.ind[c[2]] += teams[1].total; tour.ind[c[3]] += teams[1].total;
+    if(teams[0].total !== teams[1].total){
+      const w = teams[0].total > teams[1].total ? 0 : 1;
+      tour.vinte[c[w*2]]++; tour.vinte[c[w*2+1]]++;
+    }
+    // (in caso di parità la partita non è conteggiata come vinta da nessuna coppia)
+    if(tour.partita===2) pushHistoryTorneo();   // torneo concluso
+  }
+  function pushHistoryTorneo(){
+    const hist = lsGet(LS_HIST) || [];
+    const max = Math.max(...tour.ind);
+    const winners = players.filter((p,i)=>tour.ind[i]===max);
+    hist.unshift({
+      data: Date.now(),
+      mode: 4, target, tipo: "torneo",
+      giocatori: players.map((p,i)=>({name:p, total:tour.ind[i]})),
+      vincitore: winners.join(" e "),
+      partite: tour.storia
+    });
+    if(hist.length>200) hist.length = 200;
+    lsSet(LS_HIST, hist);
+  }
+  function ptsOf(r){ return Array.isArray(r) ? r : r.pts; }
+  function recompute(){
+    teams.forEach(t=>t.total=0);
+    rounds.forEach(r=>ptsOf(r).forEach((p,i)=>teams[i].total+=p));
+  }
+  document.querySelectorAll("#seg-mode button").forEach(b=>{
+    b.addEventListener("click",()=>{
+      document.querySelectorAll("#seg-mode button").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on"); mode = parseInt(b.dataset.mode); renderNames();
+    });
+  });
+  document.querySelectorAll("#seg-target button").forEach(b=>{
+    b.addEventListener("click",()=>{
+      document.querySelectorAll("#seg-target button").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on"); target = parseInt(b.dataset.t);
+    });
+  });
+  renderNames();
+
+  $("btn-start").addEventListener("click",()=>{
+    const slots = (mode===4) ? 4 : mode;
+    let picked = [];
+    for(let i=0;i<slots;i++) picked.push(slotValue("sel-"+i));
+    // controllo doppioni tra i nomi scelti
+    const nonEmpty = picked.filter(v=>v!=="");
+    const dup = nonEmpty.find((v,i)=>nonEmpty.indexOf(v)!==i);
+    if(dup){ showAlert("Attenzione: \""+dup+"\" è stato selezionato più di una volta. Ogni giocatore può comparire una sola volta."); return; }
+    // estrazione «a caso» a 4 giocatori: le carte formano anche le coppie
+    const dsel0 = $("sel-dealer");
+    let drawCards = null, drawNames = null, drawWinner = 0, coppieText = "";
+    if(mode===4 && dsel0 && dsel0.value==="rand"){
+      const nomi = [];
+      for(let i=0;i<4;i++) nomi.push(picked[i] || ("Giocatore "+(i+1)));
+      const pool = RANKS.map((r,i)=>i);
+      for(let k=pool.length-1;k>0;k--){ const j=rnd(k+1); [pool[k],pool[j]]=[pool[j],pool[k]]; }
+      const vals = pool.slice(0,4);
+      const pesca = nomi.map((nm,i)=>{
+        const su = SUITS[rnd(SUITS.length)];
+        return {nome:nm, val:vals[i], rank:RANKS[vals[i]], suit:su[0], col:su[1]};
+      });
+      drawWinner = pesca.reduce((m,p,i,a)=>a[i].val>a[m].val?i:m, 0);   // posizione della carta più alta
+      drawNames = nomi.slice();                                          // ordine originale per l'animazione
+      drawCards = pesca.map(p=>({rank:p.rank, suit:p.suit, col:p.col}));
+      const ordinato = [...pesca].sort((a,b)=>b.val-a.val);
+      picked = ordinato.map(p=>p.nome);    // le due carte più alte = Coppia 1, le due più basse = Coppia 2
+      coppieText = "Coppie: "+esc(picked[0])+" & "+esc(picked[1])+" contro "+esc(picked[2])+" & "+esc(picked[3]);
+    }
+    // costruisci squadre/giocatori
+    teams = [];
+    if(mode===4){
+      const c1 = [picked[0],picked[1]].filter(Boolean).join(" & ") || "Coppia 1";
+      const c2 = [picked[2],picked[3]].filter(Boolean).join(" & ") || "Coppia 2";
+      teams.push({name:c1, total:0},{name:c2, total:0});
+    }else{
+      for(let i=0;i<mode;i++) teams.push({name: picked[i] || ("Giocatore "+(i+1)), total:0});
+    }
+    // giocatori fisici nell'ordine dei posti (per la rotazione del mazziere)
+    players = [];
+    for(let i=0;i<slots;i++) players.push(picked[i] || slotFallback(i));
+    const dsel = $("sel-dealer");
+    firstDealer = drawCards ? 0 : ((!dsel || dsel.value==="rand") ? rnd(players.length) : (parseInt(dsel.value)||0));
+    tour = (mode===4 && gameType==="torneo") ? {partita:0, ind:[0,0,0,0], vinte:[0,0,0,0], storia:[]} : null;
+    rounds = []; gameOver=false; startedAt = Date.now();
+    // memorizza gli eventuali nomi nuovi nella lista giocatori
+    const rubrica = savedNames();
+    picked.forEach(n=>{
+      if(n && !isDefaultName(n) && !rubrica.includes(n)) rubrica.push(n);
+    });
+    if(rubrica.length>50) rubrica.length = 50;
+    lsSet(LS_NAMES, rubrica);
+    clearDraft();
+    saveCurrent();
+    if(dsel && dsel.value==="rand"){
+      showDealerAnimation(drawCards ? drawWinner : firstDealer, ()=>{ renderGame(); show("game"); }, drawCards, coppieText, drawNames);
+      $("deal-go").textContent = "Si comincia! 🃏";
+    }else{
+      renderGame(); show("game");
+    }
+  });
+
+  // ---------- lista giocatori ----------
+  function renderRoster(){
+    const names = savedNames();
+    $("roster-empty").style.display = names.length ? "none" : "block";
+    $("roster").innerHTML = names.map((n,i)=>
+      `<span class="chip" style="padding-left:5px;"><button class="ava-btn" data-ava="${esc(n)}" style="border:none;background:transparent;padding:0;cursor:pointer;">${avatarHTML(n,"sm")}</button> ${esc(n)}<button class="chip-x" data-x="${i}" aria-label="Elimina ${esc(n)}">×</button></span>`
+    ).join("");
+    document.querySelectorAll("#roster .chip-x").forEach(x=>{
+      x.addEventListener("click",()=>{
+        const arr = savedNames(); arr.splice(+x.dataset.x,1); lsSet(LS_NAMES,arr); renderRoster();
+      });
+    });
+    document.querySelectorAll("#roster .ava-btn").forEach(b=>{
+      b.addEventListener("click",()=>openAvatarPicker(b.dataset.ava));
+    });
+  }
+  $("btn-players-back").addEventListener("click",()=>{ renderNames(); checkResume(); show("setup"); });
+  $("btn-add-player").addEventListener("click",()=>{
+    const inp = $("new-player");
+    const n = (inp.value||"").trim();
+    if(!n) return;
+    const arr = savedNames();
+    if(arr.some(x=>x.toLowerCase()===n.toLowerCase())){ showAlert("\""+n+"\" è già nella lista."); return; }
+    if(arr.length>=50){ showAlert("La lista è piena (max 50 nomi). Elimina qualche nome prima di aggiungerne altri."); return; }
+    arr.push(n);
+    lsSet(LS_NAMES, arr);
+    inp.value = "";
+    renderRoster();
+  });
+
+  // ---------- riprendi partita ----------
+  function resumeCurrent(){
+    const cur = lsGet(LS_CUR);
+    if(!(cur && cur.teams && cur.teams.length)) { renderNames(); checkResume(); show("setup"); return; }
+    mode = cur.mode; target = cur.target;
+    teams = cur.teams; rounds = cur.rounds || []; startedAt = cur.startedAt || Date.now();
+    players = cur.players || []; firstDealer = cur.firstDealer || 0;
+    gameType = cur.gameType || "libera"; tour = cur.tour || null;
+    gameOver = false; spareggio = !!cur.spareggio;
+    renderGame(); show("game");
+  }
+  function checkResume(){
+    const cur = lsGet(LS_CUR);
+    const btn = $("btn-resume");
+    if(cur && cur.teams && cur.teams.length){
+      btn.textContent = "▶ Riprendi la partita in corso ("+cur.teams.map(t=>t.name).join(" · ")+")";
+      btn.classList.remove("hidden");
+      btn.onclick = resumeCurrent;
+    }else{
+      btn.classList.add("hidden");
+    }
+  }
+
+  // ---------- scoreboard ----------
+  function renderGame(){
+    const totalsEl = $("totals");
+    const max = Math.max(...teams.map(t=>t.total));
+    totalsEl.innerHTML = teams.map((t,i)=>{
+      const lead = !gameOver && rounds.length>0 && t.total===max && teams.filter(x=>x.total===max).length===1;
+      const tinta = (mode===4) ? (i===0 ? " pair-1" : " pair-2") : "";
+      const av = (mode!==4) ? avatarHTML(t.name,"sm") : "";
+      return `<div class="tot ${lead?"lead":""}${tinta}">
+        <div class="name">${av} ${esc(t.name)}</div>
+        <div class="pts ${t.total<0?"neg":""}">${t.total}</div>
+      </div>`;
+    }).join("");
+    renderLeadChart();
+    const pref = (gameType==="torneo" && tour) ? `🏆 Partita ${tour.partita+1} di 3 · ` : "";
+    $("meta-line").textContent = pref + `${modeLabel(mode, gameType)} · Si gioca a ${target} punti · Smazzate: ${rounds.length}`;
+    const dl = $("dealer-line");
+    if(players.length && !gameOver){
+      dl.textContent = "🃏 Prossima smazzata — le carte le dà: " + currentDealer();
+      dl.classList.remove("hidden");
+    }else{
+      dl.classList.add("hidden");
+    }
+
+    const tbl = $("history-table");
+    if(rounds.length===0){ tbl.innerHTML=""; $("history-empty").style.display="block"; }
+    else{
+      $("history-empty").style.display="none";
+      let html = "<tr><th>#</th>"+teams.map(t=>`<th>${esc(t.name)}</th>`).join("")+"</tr>";
+      const running = teams.map(()=>0);
+      rounds.forEach((r,i)=>{
+        html += `<tr data-r="${i}"><td>${i+1}</td>`+ptsOf(r).map((p,j)=>{
+          running[j]+=p;
+          return `<td class="${p<0?"neg":""}">${p>0?"+":""}${p}<br><small style="color:#8a8271">${running[j]}</small></td>`;
+        }).join("")+"</tr>";
+      });
+      tbl.innerHTML = html;
+      if(!gameOver){
+        tbl.querySelectorAll("tr[data-r]").forEach(tr=>{
+          tr.addEventListener("click",()=>{
+            const i = +tr.dataset.r;
+            showConfirm("Sei sicuro di voler modificare la smazzata "+(i+1)+"? I punti attuali verranno sostituiti da quelli nuovi.",
+              ()=>startEditRound(i), "Sì, modifica");
+          });
+        });
+      }
+    }
+    $("edit-hint").classList.toggle("hidden", rounds.length===0 || gameOver);
+    const banner = $("winner-banner");
+    banner.classList.toggle("spareggio", spareggio && !gameOver);
+    if(gameOver){
+      banner.classList.remove("hidden");
+      if(gameType==="torneo" && tour && tour.partita<2){
+        const w = teams.reduce((a,b)=>b.total>a.total?b:a);
+        banner.textContent = `Partita ${tour.partita+1} vinta da ${w.name}!`;
+        $("btn-new-round").disabled = false;
+        $("btn-new-round").textContent = "▶ Inizia la partita "+(tour.partita+2)+" di 3 · nuove coppie";
+      }else if(gameType==="torneo" && tour){
+        const max = Math.max(...tour.ind);
+        const winners = players.filter((p,i)=>tour.ind[i]===max);
+        banner.textContent = `🏆 Torneo vinto da ${winners.join(" e ")} con ${max} punti!`;
+        $("btn-new-round").disabled = true;
+        $("btn-new-round").textContent = "＋ Nuova smazzata";
+      }else{
+        const w = teams.reduce((a,b)=>b.total>a.total?b:a);
+        banner.textContent = `🏆 ${w.name} vince con ${w.total} punti!`;
+        $("btn-new-round").disabled = true;
+        $("btn-new-round").textContent = "＋ Nuova smazzata";
+      }
+    }else if(spareggio){
+      const maxTot = Math.max(...teams.map(t=>t.total));
+      banner.classList.remove("hidden");
+      banner.textContent = `⚖️ Parità a ${maxTot} punti: si gioca una smazzata di spareggio!`;
+      $("btn-new-round").disabled = false;
+      $("btn-new-round").textContent = getDraft() ? "✏️ Riprendi lo spareggio" : "＋ Smazzata di spareggio";
+    }else{
+      banner.classList.add("hidden");
+      $("btn-new-round").disabled = false;
+      $("btn-new-round").textContent = getDraft() ? "✏️ Riprendi la smazzata in corso" : "＋ Nuova smazzata";
+    }
+    const tp = $("tour-panel");
+    if(gameType==="torneo" && tour){
+      tp.classList.remove("hidden");
+      const c = COMBOS[tour.partita];
+      const live = tour.ind.slice();
+      if(!gameOver){
+        live[c[0]] += teams[0].total; live[c[1]] += teams[0].total;
+        live[c[2]] += teams[1].total; live[c[3]] += teams[1].total;
+      }
+      $("tour-board").innerHTML = players.map((p,i)=>`<span>${esc(p)}<b class="${live[i]<0?"neg":""}">${live[i]}</b></span>`).join("");
+    }else{
+      tp.classList.add("hidden");
+    }
+    const tdp = $("tour-detail-panel");
+    if(gameType==="torneo" && tour && gameOver && tour.partita===2 && tour.storia && tour.storia.length){
+      // torneo concluso: tutte e 3 le partite con le loro smazzate
+      tdp.classList.remove("hidden");
+      $("tour-detail-title").textContent = "Dettaglio del torneo";
+      $("tour-detail").innerHTML = tour.storia.map((p,i)=>
+        `<h4>Partita ${i+1}: ${esc(p.coppie[0])} contro ${esc(p.coppie[1])}</h4>`+
+        tabellaSmazzate(p.coppie, p.smazzate)
+      ).join("");
+    }else if(gameOver && rounds.length){
+      // fine partita (2, 3, 4 giocatori o partita intermedia del torneo): riepilogo delle smazzate
+      tdp.classList.remove("hidden");
+      $("tour-detail-title").textContent = "Dettaglio della partita";
+      $("tour-detail").innerHTML = tabellaSmazzate(teams.map(t=>t.name), rounds.map(r=>ptsOf(r)));
+    }else{
+      tdp.classList.add("hidden");
+    }
+    $("btn-undo").disabled = rounds.length===0 || gameOver;
+  }
+
+  // ---------- smazzata ----------
+  function blank(){ return {pulito:0,sporco:0,semi:0,chiusura:false,pozzetto:false,terra:0,mano:0}; }
+  function buildRoundData(){
+    if(mode===3 && roundType==="1v2"){
+      roundData = [blank(), blank()];   // [solista, coppia]
+      roundData[0].pozzetto = true;     // il solista è chi ha preso il pozzetto da 18: sempre attivo
+    }
+    else roundData = teams.map(()=>blank());
+  }
+  $("btn-new-round").addEventListener("click",()=>{
+    if(gameType==="torneo" && tour && gameOver && tour.partita<2){
+      // partita successiva del torneo: cambiano le coppie, il mazziere continua a ruotare
+      tour.partita++;
+      firstDealer = (firstDealer + rounds.length) % players.length;
+      rounds = [];
+      gameOver = false; spareggio = false;
+      buildTeamsFromPairing(tour.partita);
+      clearDraft();
+      saveCurrent();
+      renderGame();
+      return;
+    }
+    const dr = getDraft();
+    if(dr){
+      editIdx = (typeof dr.editIdx==="number") ? dr.editIdx : null;
+      roundType = dr.roundType || "1v2";
+      soloIdx = dr.soloIdx || 0;
+      roundData = dr.roundData;
+    }else{
+      editIdx = null;
+      roundType = (mode===3 && teams.some(t=>t.total>=SOGLIA_TUTTI_SOLI)) ? "soli" : "1v2";
+      soloIdx = 0;
+      buildRoundData();
+    }
+    renderRoundForms(); show("round");
+  });
+  $("btn-back-round").addEventListener("click",()=>{
+    // la bozza resta salvata: si può tornare in qualsiasi momento
+    renderGame(); show("game");
+  });
+  $("btn-discard-round").addEventListener("click",()=>{
+    showConfirm("Vuoi scartare questa smazzata? I valori inseriti andranno persi.", ()=>{
+      clearDraft(); editIdx = null;
+      renderGame(); show("game");
+    }, "Sì, scarta");
+  });
+
+  function startEditRound(i){
+    editIdx = i;
+    const r = rounds[i];
+    if(!Array.isArray(r) && r.det){
+      roundType = r.rtype || "1v2";
+      soloIdx = r.solo || 0;
+      roundData = JSON.parse(JSON.stringify(r.det));
+    }else{
+      // smazzata salvata col vecchio formato: si reinserisce da capo
+      roundType = "1v2"; soloIdx = 0;
+      buildRoundData();
+    }
+    renderRoundForms(); show("round");
+  }
+
+  function calcTeam(d){
+    return d.pulito*200 + d.sporco*100 + d.semi*150 + (d.chiusura?100:0) + (d.pozzetto?0:-100) + d.terra - d.mano;
+  }
+
+  function entityLabels(){
+    if(mode===3 && roundType==="1v2"){
+      const others = [0,1,2].filter(i=>i!==soloIdx);
+      return [
+        "🃏 " + teams[soloIdx].name + " (da solo)",
+        "👥 Coppia: " + teams[others[0]].name + " + " + teams[others[1]].name
+      ];
+    }
+    return teams.map(t=>t.name);
+  }
+
+  function renderRoundForms(){
+    // il solista (riga 0 nel 3 giocatori "1 contro 2") ha per definizione preso il pozzetto
+    if(mode===3 && roundType==="1v2" && roundData[0]) roundData[0].pozzetto = true;
+    const rIdx = (editIdx===null) ? rounds.length : editIdx;
+    $("round-num").textContent = (editIdx===null) ? (rIdx+1) : (rIdx+1)+" — modifica";
+    const wrap = $("round-forms");
+    let head = `<div class="mini-tot">`+
+      teams.map(t=>`<span>${esc(t.name)}<b class="${t.total<0?"neg":""}">${t.total}</b></span>`).join("")+
+    `</div>`;
+    if(players.length){
+      head += `<p class="dealer-tag">🃏 Le carte le dà: <b>${esc(dealerFor(rIdx))}</b></p>`;
+    }
+    if(mode===3){
+      if(teams.some(t=>t.total>=SOGLIA_TUTTI_SOLI)){
+        head += `<p class="dealer-tag" style="background:#fdf3d7;">⚠️ Superati i ${SOGLIA_TUTTI_SOLI} punti: da regolamento si passa a «tutti da soli». Puoi comunque scegliere diversamente qui sotto.</p>`;
+      }
+      head += `<label>Come si è giocata questa smazzata? <button class="infob" data-istr="tre">i</button></label>
+      <div class="seg" id="seg-rtype">
+        <button data-rt="1v2" class="${roundType==="1v2"?"on":""}">1 contro 2<br><small>fase a coppie</small></button>
+        <button data-rt="soli" class="${roundType==="soli"?"on":""}">Tutti da soli<br><small>3 pozzetti da 11</small></button>
+      </div>`;
+      if(roundType==="1v2"){
+        head += `<label>Chi ha preso il pozzetto da 18 (gioca da solo)?</label>
+        <div class="seg" id="seg-solo">`+
+          teams.map((t,i)=>`<button data-solo="${i}" class="${i===soloIdx?"on":""}">${esc(t.name)}</button>`).join("")+
+        `</div>
+        <p style="font-size:12px;color:#8a8271;margin:8px 0 0;">I punti della coppia verranno divisi a metà tra i due compagni, arrotondando per eccesso al multiplo di 5 (es. 375 → 190 a testa).</p>`;
+      }
+    }
+    const labels = entityLabels();
+    wrap.innerHTML = head + labels.map((lbl,i)=>{
+      const tinta = (mode===4) ? (i===0 ? " pair-1" : " pair-2") : "";
+      return `<div class="team-block${tinta}" data-i="${i}">
+        <h3>${esc(lbl)}</h3>
+        <div class="row"><div class="lbl">Burraco pulito <button class="infob" data-istr="burrachi">i</button><small>+200</small></div>${stepper(i,"pulito")}</div>
+        <div class="row"><div class="lbl">Burraco sporco <button class="infob" data-istr="burrachi">i</button><small>+100</small></div>${stepper(i,"sporco")}</div>
+        ${useSemi?`<div class="row"><div class="lbl">Burraco semipulito <button class="infob" data-istr="burrachi">i</button><small>+150</small></div>${stepper(i,"semi")}</div>`:""}
+        <div class="row"><div class="lbl">Chiusura <button class="infob" data-istr="chiusura">i</button><small>+100</small></div><button class="toggle" data-act="chiusura" data-i="${i}"></button></div>
+        <div class="row"><div class="lbl">Pozzetto preso <button class="infob" data-istr="pozzetto">i</button><small>${(mode===3&&roundType==="1v2"&&i===0)?"il solista l'ha preso ✓":"se no: −100"}</small></div><button class="toggle${(mode===3&&roundType==="1v2"&&i===0)?" auto":""}" data-act="pozzetto" data-i="${i}"></button></div>
+        <div class="row"><div class="lbl">Carte a terra <button class="infob" data-istr="carte">i</button><small>punti calati — o il netto già scontato della mano</small></div>
+          <div class="numpad-field"><button class="signbtn" data-sign="terra" data-i="${i}">±</button><input type="number" inputmode="numeric" data-num="terra" data-i="${i}" value="0"></div></div>
+        <button class="helper-toggle" data-help="terra" data-i="${i}">Contatore carte a terra ▾</button>
+        <div class="counter" id="cnt-terra-${i}">${counterBtns(i,"terra")}</div>
+        <div class="row"><div class="lbl">Carte in mano <button class="infob" data-istr="carte">i</button><small>punti da sottrarre (−)</small></div>
+          <div class="numpad-field"><input type="number" inputmode="numeric" min="0" data-num="mano" data-i="${i}" value="0"></div></div>
+        <button class="helper-toggle" data-help="mano" data-i="${i}">Contatore carte in mano ▾</button>
+        <div class="counter" id="cnt-mano-${i}">${counterBtns(i,"mano")}</div>
+        <div class="round-total" id="rt-${i}">Totale smazzata: 0</div>
+      </div>`;
+    }).join("");
+    bindRoundEvents();
+    roundData.forEach((d,i)=>{
+      ["pulito","sporco","semi"].forEach(f=>{ const el=$("v-"+f+"-"+i); if(el) el.textContent=d[f]; });
+      const ch=document.querySelector(`#round-forms .toggle[data-act="chiusura"][data-i="${i}"]`); if(ch) ch.classList.toggle("on", d.chiusura);
+      const pz=document.querySelector(`#round-forms .toggle[data-act="pozzetto"][data-i="${i}"]`); if(pz) pz.classList.toggle("on", d.pozzetto);
+      const t=document.querySelector(`#round-forms [data-num="terra"][data-i="${i}"]`); if(t) t.value=d.terra;
+      const m=document.querySelector(`#round-forms [data-num="mano"][data-i="${i}"]`); if(m) m.value=d.mano;
+      updateRT(i);
+    });
+  }
+
+  function stepper(i,field){
+    return `<div class="stepper">
+      <button data-step="-1" data-f="${field}" data-i="${i}">−</button>
+      <div class="val" id="v-${field}-${i}">0</div>
+      <button data-step="1" data-f="${field}" data-i="${i}">＋</button>
+    </div>`;
+  }
+  const cardVals = [["Jolly",30],["Pinella (2)",20],["Asso",15],["K–8",10],["7–3",5]];
+  function counterBtns(i,kind){
+    return cardVals.map(([n,v])=>`<button data-add="${v}" data-kind="${kind}" data-i="${i}">${n}<b>+${v}</b></button>`).join("")
+      + `<button data-add="reset" data-kind="${kind}" data-i="${i}" style="background:#f3e2df;color:var(--red)">Azzera<b>0</b></button>`;
+  }
+
+  function bindRoundEvents(){
+    document.querySelectorAll("#round-forms [data-step]").forEach(b=>{
+      b.addEventListener("click",()=>{
+        const i=+b.dataset.i, f=b.dataset.f;
+        roundData[i][f] = Math.max(0, roundData[i][f] + parseInt(b.dataset.step));
+        $("v-"+f+"-"+i).textContent = roundData[i][f];
+        updateRT(i);
+      });
+    });
+    document.querySelectorAll("#round-forms .toggle").forEach(b=>{
+      b.addEventListener("click",()=>{
+        const i=+b.dataset.i, act=b.dataset.act;
+        // il solista (riga 0, 3 giocatori 1v2) ha sempre il pozzetto: non si può togliere
+        if(act==="pozzetto" && mode===3 && roundType==="1v2" && i===0){
+          roundData[0].pozzetto = true; b.classList.add("on"); return;
+        }
+        if(act==="chiusura" && !roundData[i].chiusura){
+          roundData.forEach((d,j)=>{ if(j!==i){ d.chiusura=false; } });
+          document.querySelectorAll('#round-forms .toggle[data-act="chiusura"]').forEach(x=>{ if(+x.dataset.i!==i) x.classList.remove("on"); });
+        }
+        roundData[i][act] = !roundData[i][act];
+        b.classList.toggle("on", roundData[i][act]);
+        if(act==="chiusura" && roundData[i].chiusura && !roundData[i].pozzetto){
+          roundData[i].pozzetto = true;
+          const pz = document.querySelector(`#round-forms .toggle[data-act="pozzetto"][data-i="${i}"]`);
+          if(pz) pz.classList.add("on");
+        }
+        roundData.forEach((_,j)=>updateRT(j));
+      });
+    });
+    document.querySelectorAll("#seg-rtype button").forEach(b=>{
+      b.addEventListener("click",()=>{
+        if(roundType===b.dataset.rt) return;
+        roundType = b.dataset.rt;
+        buildRoundData();
+        renderRoundForms();
+      });
+    });
+    document.querySelectorAll("#seg-solo button").forEach(b=>{
+      b.addEventListener("click",()=>{
+        soloIdx = +b.dataset.solo;
+        renderRoundForms();
+      });
+    });
+    document.querySelectorAll("#round-forms [data-num]").forEach(inp=>{
+      inp.addEventListener("input",()=>{
+        const i=+inp.dataset.i, f=inp.dataset.num;
+        const v = parseInt(inp.value)||0;
+        roundData[i][f] = (f==="terra") ? v : Math.max(0, v);   // il netto a terra può essere negativo
+        updateRT(i);
+      });
+      // toccando la casella, lo 0 sparisce da solo; se c'è già un numero viene selezionato
+      inp.addEventListener("focus",()=>{
+        if(inp.value==="0") inp.value="";
+        else inp.select();
+      });
+      // uscendo dalla casella vuota, torna 0
+      inp.addEventListener("blur",()=>{
+        if(inp.value.trim()==="") inp.value = roundData[+inp.dataset.i][inp.dataset.num] || 0;
+      });
+    });
+    document.querySelectorAll("#round-forms [data-sign]").forEach(b=>{
+      b.addEventListener("click",()=>{
+        const i=+b.dataset.i;
+        roundData[i].terra = -roundData[i].terra;
+        const inp = document.querySelector(`#round-forms [data-num="terra"][data-i="${i}"]`);
+        if(inp) inp.value = roundData[i].terra;
+        updateRT(i);
+      });
+    });
+    document.querySelectorAll("#round-forms [data-help]").forEach(b=>{
+      b.addEventListener("click",()=>{
+        $("cnt-"+b.dataset.help+"-"+b.dataset.i).classList.toggle("open");
+      });
+    });
+    document.querySelectorAll("#round-forms [data-add]").forEach(b=>{
+      b.addEventListener("click",()=>{
+        const i=+b.dataset.i, kind=b.dataset.kind;
+        if(b.dataset.add==="reset") roundData[i][kind]=0;
+        else roundData[i][kind]+=parseInt(b.dataset.add);
+        const inp = document.querySelector(`#round-forms [data-num="${kind}"][data-i="${i}"]`);
+        inp.value = roundData[i][kind];
+        updateRT(i);
+      });
+    });
+  }
+
+  function updateRT(i){
+    const v = calcTeam(roundData[i]);
+    const el = $("rt-"+i);
+    if(!el) return;
+    el.textContent = "Totale smazzata: " + (v>0?"+":"") + v;
+    el.classList.toggle("neg", v<0);
+    saveDraft();
+  }
+
+  $("btn-save-round").addEventListener("click",()=>{
+    let pts;
+    if(mode===3 && roundType==="1v2"){
+      const soloPts = calcTeam(roundData[0]);
+      const pairPts = calcTeam(roundData[1]);
+      const half = Math.ceil(pairPts/2/5)*5;   // metà arrotondata per eccesso al multiplo di 5 (es. 375 → 190 a testa)
+      pts = teams.map((t,i)=> i===soloIdx ? soloPts : half);
+    }else{
+      pts = roundData.map(calcTeam);
+    }
+    const voce = {pts, det: JSON.parse(JSON.stringify(roundData)), rtype: roundType, solo: soloIdx};
+    if(editIdx===null) rounds.push(voce);
+    else rounds[editIdx] = voce;
+    editIdx = null;
+    clearDraft();
+    recompute();
+    if(!gameOver && teams.some(t=>t.total>=target)){
+      // Controllo parità: se più squadre condividono il punteggio massimo sopra soglia,
+      // da regolamento si gioca una smazzata di spareggio (non si chiude la partita).
+      const maxTot = Math.max(...teams.map(t=>t.total));
+      const inTesta = teams.filter(t=>t.total===maxTot).length;
+      if(inTesta > 1){
+        spareggio = true;    // resta gameOver=false, il pulsante nuova smazzata rimane attivo
+      } else {
+        spareggio = false;
+        gameOver = true;
+        if(gameType==="torneo" && tour) chiudiPartitaTorneo();
+        else pushHistory();     // salva la partita finita nello storico, con data
+      }
+    }
+    saveCurrent();
+    renderGame(); show("game");
+  });
+
+  $("btn-undo").addEventListener("click",()=>{
+    if(rounds.length===0 || gameOver) return;
+    rounds.pop();
+    recompute();
+    saveCurrent();
+    renderGame();
+  });
+
+  $("btn-reset").addEventListener("click",()=>{
+    const vaiAlMenu = ()=>{ renderNames(); checkResume(); show("setup"); };
+    if(rounds.length>0 && !gameOver){
+      showConfirm("La partita in corso resta salvata: potrai riprenderla dal menu. Vuoi tornare al menu?", vaiAlMenu, "Sì, torna al menu");
+    }else{
+      lsDel(LS_CUR);
+      vaiAlMenu();
+    }
+  });
+
+  // ---------- storico partite ----------
+  function renderHistory(){
+    const hist = lsGet(LS_HIST) || [];
+    const list = $("hist-list");
+    $("hist-empty").style.display = hist.length ? "none" : "block";
+    $("btn-hist-clear").disabled = hist.length===0;
+    // raggruppa per mese e anno (lo storico è già ordinato dal più recente)
+    const gruppi = []; const mappa = {};
+    hist.forEach(h=>{
+      const d = new Date(h.data);
+      const chiave = d.getFullYear()+"-"+d.getMonth();
+      if(!mappa[chiave]){
+        let nome = d.toLocaleDateString("it-CH",{month:"long",year:"numeric"});
+        nome = nome.charAt(0).toUpperCase()+nome.slice(1);
+        mappa[chiave] = {nome, items:[]};
+        gruppi.push(mappa[chiave]);
+      }
+      mappa[chiave].items.push(h);
+    });
+    list.innerHTML = gruppi.map((g,gi)=>
+      `<details class="hist-group" ${gi===0?"open":""}>
+        <summary>${esc(g.nome)}<span class="hg-count">${g.items.length} ${g.items.length===1?"partita":"partite"}</span></summary>
+        ${g.items.map(histItemHTML).join("")}
+      </details>`
+    ).join("");
+  }
+  function tabellaSmazzate(nomi, smazzate){
+    let out = "<table><tr><th>#</th>"+nomi.map(n=>`<th>${esc(n)}</th>`).join("")+"</tr>";
+    const run = nomi.map(()=>0);
+    smazzate.forEach((r,i)=>{
+      out += `<tr><td>${i+1}</td>`+r.map((p,j)=>{
+        run[j]+=p;
+        return `<td class="${p<0?"neg":""}">${p>0?"+":""}${p}<br><small style="color:#8a8271">${run[j]}</small></td>`;
+      }).join("")+"</tr>";
+    });
+    return out+"</table>";
+  }
+  function histDetailHTML(h){
+    if(h.tipo==="torneo" && h.partite && h.partite.length){
+      return h.partite.map((p,i)=>
+        `<h4>Partita ${i+1}: ${esc(p.coppie[0])} contro ${esc(p.coppie[1])}</h4>`+
+        tabellaSmazzate(p.coppie, p.smazzate)
+      ).join("");
+    }
+    if(h.smazzate && h.smazzate.length){
+      return tabellaSmazzate(h.giocatori.map(g=>g.name), h.smazzate);
+    }
+    return `<p style="color:#8a8271;font-size:13px;">Il dettaglio delle smazzate è disponibile solo per le partite giocate dopo questo aggiornamento dell'app.</p>`;
+  }
+  function histItemHTML(h){
+    return `<details class="hist-item">
+      <summary>
+        <div class="hist-date">${esc(fmtDate(h.data))}</div>
+        <div class="hist-mode">${esc(modeLabel(h.mode, h.tipo || h.cm))} · a ${h.target} punti</div>
+        <div class="hist-players">${
+          h.giocatori.map(g=>{
+            const isW = h.vincitore.split(" e ").includes(g.name);
+            return `<span class="${isW?"w":""}">${esc(g.name)}: <b>${g.total}</b></span>`;
+          }).join(" &nbsp;·&nbsp; ")
+        }</div>
+        <div class="hist-hint"><span class="apri">▸ Tocca per vedere tutte le smazzate</span><span class="chiudi">▾ Nascondi il dettaglio</span></div>
+      </summary>
+      <div class="hist-detail">${histDetailHTML(h)}</div>
+    </details>`;
+  }
+  $("btn-istr-back").addEventListener("click",()=>{
+    const dest = (returnFromIstr==="istruzioni") ? "setup" : returnFromIstr;
+    if(dest==="setup"){ renderNames(); checkResume(); }
+    show(dest);
+  });
+  $("btn-hist-back").addEventListener("click",()=>{ renderNames(); checkResume(); show("setup"); });
+  $("btn-hist-clear").addEventListener("click",()=>{
+    showConfirm("Sei sicuro di voler cancellare tutto lo storico delle partite? L'operazione non si può annullare.",
+      ()=>{ lsDel(LS_HIST); renderHistory(); },
+      "Sì, cancella tutto");
+  });
+  // impostazioni
+  $("btn-settings-back").addEventListener("click",()=>{ renderNames(); checkResume(); show("setup"); });
+  $("btn-regole-back").addEventListener("click",()=>{ renderNames(); checkResume(); show("setup"); });
+  $("btn-clear-hist").addEventListener("click",()=>{
+    showConfirm("Sei sicuro di voler cancellare tutto lo storico delle partite? L'operazione non si può annullare.",
+      ()=>{ lsDel(LS_HIST); showAlert("Storico svuotato."); },
+      "Sì, cancella tutto");
+  });
+  // avatar modal
+  $("avatar-modal-close").addEventListener("click", closeAvatarPicker);
+  $("avatar-modal").addEventListener("click", e=>{ if(e.target===$("avatar-modal")) closeAvatarPicker(); });
+
+  // ---------- avvio ----------
+  // rete di sicurezza: salva lo stato quando l'app va in background o viene chiusa
+  // (su iOS Safari 'pagehide' e 'visibilitychange' sono i più affidabili)
+  function safetySave(){
+    try{
+      if(currentScreen==="round") saveDraft();
+      if(teams.length && !gameOver) saveCurrent();
+    }catch(e){}
+  }
+  window.addEventListener("pagehide", safetySave);
+  window.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") safetySave(); });
+  window.addEventListener("beforeunload", safetySave);
+
+  (function init(){
+    const s = getSett();
+    applyTheme(s.theme);
+    updateWake();
+    checkResume();
+    syncNav("setup");
+  })();
+})();
+</script>
+</body>
+</html>
